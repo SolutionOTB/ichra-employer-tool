@@ -1535,6 +1535,53 @@ input[type=range]::-moz-range-thumb {
 // ── CONFIG ─────────────────────────────────────────────────────────
 const WORKER_URL = 'https://ichra-chat-proxy.chris-c33.workers.dev'; // updated worker.js with personas
 const SHEET_URL  = 'https://script.google.com/macros/s/AKfycbxYnXTB-V8fOErzVwEE-0HI1jaLyn7030Uyxnk0YuuatV7vkupZvtCCv4feAy9XEmviOA/exec';
+// ── ENGAGEMENT TRACKING ────────────────────────────────────────────
+// Persistent per-browser session id (shared by chat turns + events).
+const SESSION_ID = (function () {
+  try {
+    let id = localStorage.getItem('otb_session_id');
+    if (!id) {
+      id = (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + Math.random().toString(16).slice(2)));
+      localStorage.setItem('otb_session_id', id);
+    }
+    return id;
+  } catch (_) {
+    return 'sess-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+  }
+})();
+let TURN_INDEX = 0; // 1-based per browser; incremented on each chat send
+// Fire an engagement event. Fire-and-forget — never blocks the UI.
+function track(type, data) {
+  try {
+    fetch(WORKER_URL + '/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
+      body: JSON.stringify({
+        sessionId: SESSION_ID,
+        type: type,
+        persona: (typeof state !== 'undefined' && state.persona) || null,
+        page: location.pathname + (location.hash || ''),
+        data: data || null
+      })
+    }).catch(function () {});
+  } catch (_) {}
+}
+// page_view on load + scroll-depth milestones (25/50/75/100%) once each.
+window.addEventListener('DOMContentLoaded', function () {
+  track('page_view', { ref: document.referrer || null });
+  const hit = {};
+  function onScroll() {
+    const h = document.documentElement;
+    const max = (h.scrollHeight - h.clientHeight);
+    if (max <= 0) return;
+    const pct = Math.round((h.scrollTop || window.pageYOffset) / max * 100);
+    [25, 50, 75, 100].forEach(function (m) {
+      if (pct >= m && !hit[m]) { hit[m] = true; track('scroll_depth', { depth: m }); }
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+});
 // ── CHANNEL ONE ASSUMPTIONS ────────────────────────────────────────
 const A = {
   aflac:      { avgPrem: 600,  policiesPerPH: 1.4, y1: 0.45,  y2: 0.10,   y3: 0.10,   gaY1: 0.10, gaRen: 0.05 },
@@ -1668,6 +1715,10 @@ function launchChipTool(e, persona, toolName, preset) {
   if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
   pendingChipTool = toolName || null;
   pendingChipPreset = preset || null;
+  if (toolName) {
+    const isCalc = (toolName === 'show_commission_calculator' || toolName === 'show_contribution_calculator');
+    track(isCalc ? 'calculator_open' : 'tool_chip', { persona: persona, tool: toolName, preset: preset || null, source: 'entry_chip' });
+  }
   if (persona === 'aflac') {
     // Agent is locked — open the password gate; checkPassword() will route in
     openAflacGate(e || { stopPropagation: () => {} });
@@ -1678,6 +1729,7 @@ function launchChipTool(e, persona, toolName, preset) {
 function selectPersona(persona) {
   state.persona = persona;
   state.chatHistory = [];
+  track('persona_select', { persona: persona });
   // Header pill
   const pill = document.getElementById('personaPill');
   pill.className = 'persona-pill ' + persona;
@@ -1896,7 +1948,9 @@ async function sendMessage() {
         persona: state.persona,
         message: msg,
         history: state.chatHistory.slice(0, -1),
-        context: state.calc
+        context: state.calc,
+        sessionId: SESSION_ID,
+        turnIndex: ++TURN_INDEX
       })
     });
     clearTimeout(timeoutId);
@@ -2117,6 +2171,10 @@ function fallbackReply(msg, localTool) {
 }
 // ── INLINE TOOL CARDS ───────────────────────────────────────────────
 function buildToolCard(name, props) {
+  track('tool_render', { name: name });
+  if (name === 'show_commission_calculator' || name === 'show_contribution_calculator') {
+    track('calculator_open', { tool: name, source: 'chat' });
+  }
   const wrap = document.createElement('div');
   wrap.className = 'tool-card has-banner';
   let inner = '';
@@ -3551,6 +3609,7 @@ function wireLeadCapture(rootEl, opts = {}) {
       return;
     }
     fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) }).catch(()=>{});
+    track('lead_submit', { name: data.name, email: data.email, company: data.org, source: data.source });
     root.innerHTML = `
       <div style="text-align:center;padding:24px 12px">
         <div style="font-size:40px;color:var(--green);margin-bottom:10px;line-height:1">✓</div>
