@@ -82,6 +82,7 @@ button { font-family: inherit; }
 /* ── ENTRY SCREEN ─────────────────────────────────────────────────── */
 .entry-wrap {
   min-height: calc(100vh - 56px);
+  min-height: calc(100dvh - 56px);
   display: flex; align-items: center; justify-content: center;
   padding: 40px 20px;
   background: var(--bg);
@@ -302,7 +303,7 @@ button { font-family: inherit; }
   line-height: 1.6; max-width: 760px;
 }
 /* ── CHAT SCREEN ──────────────────────────────────────────────────── */
-.chat-wrap { display: none; flex-direction: column; min-height: calc(100vh - 56px); }
+.chat-wrap { display: none; flex-direction: column; min-height: calc(100vh - 56px); min-height: calc(100dvh - 56px); }
 .chat-wrap.active { display: flex; animation: fadeIn .35s ease; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .chat-header {
@@ -331,6 +332,7 @@ button { font-family: inherit; }
   flex: 1; display: flex; flex-direction: column;
   max-width: 780px; width: 100%; margin: 0 auto;
   padding: 24px 20px 140px;
+  padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px));
 }
 .messages { display: flex; flex-direction: column; gap: 22px; }
 .msg { display: flex; gap: 14px; max-width: 100%; }
@@ -410,6 +412,7 @@ button { font-family: inherit; }
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 30;
   background: linear-gradient(180deg, transparent, rgba(248,246,241,0.95) 24%, var(--bg) 60%);
   padding: 24px 20px 18px;
+  padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
   pointer-events: none;
 }
 .composer {
@@ -1288,6 +1291,109 @@ input[type=range]::-moz-range-thumb {
   .contrib-anc-share { padding-left: 30px; }
   .contrib-preset-btn { font-size: 10px; padding: 4px 6px; }
 }
+/* ══ FIT ASSESSMENT v2 — gamified score, gauge, breakdown, confetti ══ */
+/* Progress meter above the questions */
+.fit-progress { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.fit-progress-track { flex: 1; height: 6px; border-radius: 999px; background: var(--line-soft); overflow: hidden; }
+.fit-progress-fill { height: 100%; width: 0%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--accent-deep)); transition: width .35s cubic-bezier(.2,.7,.3,1); }
+.fit-progress-label { font-family: var(--mono); font-size: 11px; color: var(--ink-soft); letter-spacing: 0.3px; white-space: nowrap; }
+/* Answered-question check + active highlight */
+.fit-question { position: relative; padding-left: 0; transition: opacity .2s; }
+.fit-question.answered .fit-q::after { content: '✓'; color: var(--green); font-weight: 700; margin-left: 7px; font-size: 13px; }
+/* Submit button: emphasised pulse once it unlocks */
+.fit-submit { display: inline-flex; align-items: center; gap: 8px; }
+.fit-submit:not(:disabled) { box-shadow: var(--shadow-md); }
+.fit-submit.ready { animation: fitReady .9s ease 1; }
+@keyframes fitReady { 0%{ transform: scale(1);} 35%{ transform: scale(1.045);} 100%{ transform: scale(1);} }
+.fit-submit .fit-submit-hint { font-weight: 500; opacity: 0.8; font-size: 11px; }
+/* ── Result: score gauge ── */
+.fit-result.v2 { padding: 4px 0 0; background: transparent; }
+.fit-scoreboard { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 6px; }
+.fit-gauge { position: relative; width: 168px; height: 100px; flex-shrink: 0; }
+.fit-gauge svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.fit-gauge-num { position: absolute; left: 0; right: 0; bottom: 4px; text-align: center; }
+.fit-gauge-num b { font-family: var(--mono); font-size: 34px; font-weight: 600; letter-spacing: -1.5px; line-height: 1; color: var(--ink); }
+.fit-gauge-num small { display: block; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-soft); margin-top: 3px; }
+.fit-scoreboard-meta { flex: 1; min-width: 180px; }
+.fit-tier.v2 { font-size: 11px; padding: 5px 12px; margin-bottom: 9px; }
+.fit-scoreboard-meta h5 { font-size: 17px; font-weight: 700; margin: 0 0 7px; letter-spacing: -0.3px; line-height: 1.25; }
+.fit-peer { font-size: 12.5px; color: var(--ink-dim); line-height: 1.4; }
+.fit-peer b { color: var(--ink); font-weight: 600; }
+/* ── Score breakdown ── */
+.fit-breakdown { margin: 18px 0 6px; border: 0.5px solid var(--line); border-radius: var(--r-md); overflow: hidden; background: var(--surface); }
+.fit-breakdown-head { font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--ink-soft); padding: 12px 16px 8px; }
+.fit-bd-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; padding: 9px 16px; border-top: 0.5px solid var(--line-soft); }
+.fit-bd-label { font-size: 13px; color: var(--ink); font-weight: 500; }
+.fit-bd-label small { display: block; font-size: 11.5px; color: var(--ink-soft); font-weight: 400; margin-top: 1px; }
+.fit-bd-pts { font-family: var(--mono); font-size: 13px; font-weight: 600; text-align: right; white-space: nowrap; }
+.fit-bd-pts.pos { color: var(--green); }
+.fit-bd-pts.neg { color: var(--red); }
+.fit-bd-pts.zero { color: var(--ink-soft); }
+.fit-bd-bar { grid-column: 1 / -1; height: 5px; border-radius: 999px; background: var(--line-soft); overflow: hidden; }
+.fit-bd-bar i { display: block; height: 100%; width: 0%; border-radius: 999px; background: var(--green); transition: width .7s cubic-bezier(.2,.7,.3,1); }
+.fit-bd-bar i.neg { background: var(--red); }
+/* ── Result CTA ── */
+.fit-cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.fit-cta-btn { flex: 1; min-width: 180px; border: none; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; padding: 13px 18px; border-radius: var(--r-md); transition: transform .12s, box-shadow .15s, background .15s; }
+.fit-cta-btn:active { transform: translateY(1px); }
+.fit-cta-btn.primary { background: var(--ink); color: var(--bg); box-shadow: var(--shadow-md); }
+.fit-cta-btn.primary:hover { background: var(--accent-deep); }
+.fit-cta-btn.ghost { flex: 0 1 auto; min-width: 0; background: transparent; border: 0.5px solid var(--line); color: var(--ink-dim); box-shadow: none; }
+.fit-cta-btn.ghost:hover { border-color: var(--ink); color: var(--ink); }
+.fit-redo { background: none; border: none; color: var(--ink-soft); font-size: 12px; cursor: pointer; font-family: inherit; text-decoration: underline; padding: 2px 0; margin-top: 12px; }
+.fit-redo:hover { color: var(--ink); }
+/* ── Confetti canvas (full-card overlay) ── */
+.fit-confetti-canvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+/* Larger touch targets on coarse pointers */
+@media (pointer: coarse) {
+  .fit-opt { padding: 11px 16px; font-size: 14px; }
+  .fit-industry { padding: 12px 8px; }
+  .fit-rank-btn { width: 34px; height: 34px; }
+  .fit-cta-btn { padding: 15px 18px; }
+}
+@media (max-width: 480px) {
+  .fit-gauge { width: 140px; height: 86px; margin: 0 auto; }
+  .fit-scoreboard { gap: 14px; justify-content: center; }
+  .fit-scoreboard-meta { min-width: 100%; text-align: center; }
+  .fit-tier.v2 { margin-left: auto; margin-right: auto; }
+  .fit-cta-btn.primary { min-width: 100%; }
+}
+/* Scroll a freshly-rendered tool card to just below the sticky header */
+.tool-card { scroll-margin-top: 74px; }
+/* "Explore another tool" footer at the end of a tool */
+.tool-next { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line-soft); }
+.tool-next-label { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.tool-next-label span { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-soft); }
+.tool-next-label::after { content: ''; flex: 1; height: 1px; background: var(--line-soft); }
+.tool-next-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; }
+.tool-next-card {
+  display: flex; flex-direction: column; gap: 3px; text-align: left;
+  background: var(--surface); border: 0.5px solid var(--line); border-radius: var(--r-md);
+  padding: 12px 13px; cursor: pointer; font-family: inherit; transition: border-color .15s, box-shadow .15s, transform .12s;
+}
+.tool-next-card:hover { border-color: var(--ink); box-shadow: var(--shadow-sm); }
+.tool-next-card:active { transform: translateY(1px); }
+.tool-next-icon { width: 20px; height: 20px; color: var(--accent-deep); }
+.tool-next-icon svg { width: 100%; height: 100%; }
+.tool-next-t { font-size: 13px; font-weight: 600; color: var(--ink); }
+.tool-next-d { font-size: 11.5px; color: var(--ink-soft); line-height: 1.35; }
+.tool-next-advisor { margin-top: 12px; font-size: 12.5px; color: var(--ink-dim); }
+.tool-next-link { background: none; border: none; color: var(--accent-deep); font-weight: 600; font-family: inherit; font-size: 12.5px; cursor: pointer; padding: 0; text-decoration: underline; }
+.tool-next-link:hover { color: var(--ink); }
+@media (pointer: coarse) { .tool-next-card { padding: 14px; } }
+/* Keyboard accessibility: a clear, on-brand focus ring (mouse users unaffected) */
+.fit-opt:focus-visible, .fit-industry:focus-visible, .fit-rank-btn:focus-visible,
+.fit-submit:focus-visible, .fit-cta-btn:focus-visible, .fit-redo:focus-visible,
+.chip:focus-visible, .composer-send:focus-visible,
+.tool-next-card:focus-visible, .tool-next-link:focus-visible {
+  outline: 2px solid var(--accent-deep); outline-offset: 2px;
+}
+/* Respect reduced-motion: kill animations, show end state instantly */
+@media (prefers-reduced-motion: reduce) {
+  .fit-progress-fill, .fit-bd-bar i, .fit-cta-btn { transition: none; }
+  .fit-submit.ready, .tool-card, .fit-result.show { animation: none; }
+  .fit-confetti-canvas { display: none !important; }
+}
 </style>
 </head>
 <body>
@@ -1821,13 +1927,15 @@ function appendAssistantMessage(text, opts = {}) {
   // Thinking placeholder uses animated dots instead of streamed text
   if (text === '__thinking__') {
     txt.innerHTML = '<span class="thinking-dots" aria-label="Thinking"><span></span><span></span><span></span></span>';
-    scrollToBottom();
+    followStream(wrap);
     return wrap;
   }
   // Stream the text in
   streamText(txt, text, () => {
+    let addedAffordance = false;
     if (opts.launchpad && opts.launchpad.length) {
       body.appendChild(buildLaunchpad(opts.launchpad));
+      addedAffordance = true;
     }
     if (opts.suggestions && opts.suggestions.length) {
       const sep = document.createElement('div');
@@ -1838,13 +1946,21 @@ function appendAssistantMessage(text, opts = {}) {
       sg.className = 'suggestions';
       sg.innerHTML = opts.suggestions.map(s => `<button class="chip" onclick="useSuggestion(this.textContent)">${escapeHtml(s)}</button>`).join('');
       body.appendChild(sg);
+      addedAffordance = true;
     }
+    let toolCard = null;
     if (opts.tools && opts.tools.length) {
-      opts.tools.forEach(tc => body.appendChild(buildToolCard(tc.name, tc.props || {})));
+      opts.tools.forEach(tc => { toolCard = buildToolCard(tc.name, tc.props || {}); body.appendChild(toolCard); });
+      addedAffordance = true;
     }
-    scrollToBottom();
+    // A rendered tool card: pin ITS top under the header so the first question
+    // is visible. A launchpad/suggestions: anchor the turn top. Plain text:
+    // just keep it in view.
+    if (toolCard) revealToolCard(toolCard);
+    else if (addedAffordance) revealTurn(wrap);
+    else followStream(wrap);
   });
-  scrollToBottom();
+  followStream(wrap);
   return wrap;
 }
 function appendUserMessage(text) {
@@ -1857,7 +1973,10 @@ function appendUserMessage(text) {
       <div class="msg-text">${escapeHtml(text).replace(/\n/g,'<br>')}</div>
     </div>`;
   document.getElementById('messages').appendChild(wrap);
-  scrollToBottom();
+  // Just bring the new message into view if it's behind the composer — do NOT
+  // scroll it to the top, or it fights the later tool-card reveal (the page
+  // would jump down to the message, then back up to the tool).
+  followStream(wrap);
 }
 function streamText(el, text, done) {
   // Word-by-word streaming for natural rhythm
@@ -1888,7 +2007,66 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]);
 }
 function scrollToBottom() {
-  setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 30);
+  setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: prefersReducedMotion() ? 'auto' : 'smooth' }), 30);
+}
+function prefersReducedMotion() {
+  return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+function stickyHeaderOffset() {
+  const h = document.querySelector('.topbar');
+  return (h ? h.offsetHeight : 56) + 14;
+}
+// Anchor a freshly-added turn near the TOP of the viewport (just under the
+// sticky header) so the reader starts at the beginning of the new content —
+// instead of being dumped at the page bottom where earlier questions/answers
+// are scrolled off-screen. This is the ChatGPT/Claude "your message jumps to
+// the top, the response flows in below it" pattern.
+function revealTurn(el, gap) {
+  if (!el) return;
+  setTimeout(() => {
+    const offset = gap != null ? gap : stickyHeaderOffset();
+    const top = el.getBoundingClientRect().top + window.pageYOffset - offset;
+    window.scrollTo({ top: Math.max(0, top), behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+  }, 40);
+}
+// Bring an interactive control (a Next/submit button, a result panel) fully
+// into view above the fixed composer, so the user reaches for IT rather than
+// the chat send box after making their last selection.
+function scrollControlIntoView(el, topGap) {
+  if (!el) return;
+  setTimeout(() => {
+    const gap = topGap != null ? topGap : (stickyHeaderOffset() + 40);
+    const rect = el.getBoundingClientRect();
+    const composerClearance = 150; // keep clear of the fixed composer at the bottom
+    const fitsBelow = rect.bottom <= window.innerHeight - composerClearance;
+    const fitsAbove = rect.top >= gap;
+    if (fitsBelow && fitsAbove) return; // already comfortably visible — don't yank
+    const top = rect.top + window.pageYOffset - gap;
+    window.scrollTo({ top: Math.max(0, top), behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+  }, 40);
+}
+// Pin a freshly-rendered tool card's TOP just below the sticky header so the
+// reader starts at the tool's first question (not scrolled past it). Runs after
+// the card's entrance animation + layout settle.
+function revealToolCard(card) {
+  if (!card) return;
+  // One clean motion to the card's top, just under the sticky header. Computed
+  // target (not scrollIntoView) so the offset is exact and the direction is
+  // predictable. Runs once, after layout settles.
+  requestAnimationFrame(() => setTimeout(() => {
+    const target = Math.max(0, card.getBoundingClientRect().top + window.pageYOffset - stickyHeaderOffset());
+    window.scrollTo({ top: target, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+  }, 120));
+}
+// During streaming, only nudge if the growing text has slipped behind the
+// fixed composer — never yank the reader away from where they are.
+function followStream(el) {
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  const composerClearance = 150;
+  if (rect.bottom > window.innerHeight - composerClearance) {
+    window.scrollBy({ top: rect.bottom - (window.innerHeight - composerClearance) + 24, behavior: 'auto' });
+  }
 }
 function useSuggestion(text) {
   document.getElementById('composerInput').value = text;
@@ -1999,7 +2177,11 @@ async function sendMessage() {
     currentRequest = null;
     setSendButtonStopping(false);
   }
-  scrollToBottom();
+  // If the reply rendered an interactive tool, pin the tool card's top under
+  // the header so its first question is visible; otherwise keep text in view.
+  const renderedCard = placeholder && placeholder.querySelector('.tool-card');
+  if (renderedCard) revealToolCard(renderedCard);
+  else followStream(placeholder);
 }
 // SSE stream reader — parses Anthropic event protocol incrementally
 async function streamSSE(resp, txtEl, signal) {
@@ -2044,7 +2226,7 @@ async function streamSSE(resp, txtEl, signal) {
             }
             text += d.text;
             txtEl.innerHTML = formatMarkdown(text) + '<span class="stream-cursor"></span>';
-            scrollToBottom();
+            followStream(txtEl);
           } else if (d.type === 'input_json_delta' && currentTool && typeof d.partial_json === 'string') {
             currentTool.partialJson += d.partial_json;
           }
@@ -2202,6 +2384,16 @@ function buildToolCard(name, props) {
     if (name === 'show_contribution_calculator') wireContributionCalc(wrap, props);
     if (name === 'show_fit_assessment') wireFitAssessment(wrap);
     if (name === 'capture_lead') wireLeadCapture(wrap);
+    // Append the "explore another tool" footer to tools that finish in place.
+    // The fit assessment shows its footer inside the result (after submit);
+    // the lead form is a conversion endpoint, so neither gets one here.
+    if (name !== 'show_fit_assessment' && name !== 'capture_lead') {
+      const body = wrap.querySelector('.tool-body');
+      if (body) {
+        const footHTML = buildToolFooterHTML(name);
+        if (footHTML) { body.insertAdjacentHTML('beforeend', footHTML); wireToolFooter(body); }
+      }
+    }
   }, 30);
   return wrap;
 }
@@ -2245,6 +2437,41 @@ function launchStarterTool(item) {
               : 'Here:';
   appendAssistantMessage(intro, { tools: [{ name: item.tool, props: item.preset || {} }] });
   state.chatHistory.push({ role: 'assistant', content: intro });
+}
+// ── "Explore another tool" footer (shown at the end of every tool) ──────
+// Reuses the persona's STARTERS list, minus the tool the user just finished.
+function buildToolFooterHTML(currentTool) {
+  const persona = state.persona || 'employer';
+  const seen = {}; const others = [];
+  (STARTERS[persona] || []).forEach(s => {
+    if (s.tool !== currentTool && !seen[s.tool]) { seen[s.tool] = 1; others.push(s); }
+  });
+  if (!others.length) return '';
+  return `
+    <div class="tool-next">
+      <div class="tool-next-label"><span>Explore another tool</span></div>
+      <div class="tool-next-grid">
+        ${others.map(s => `<button class="tool-next-card" data-explore-tool="${s.tool}" data-explore-title="${escapeHtml(s.title)}"${s.preset ? ` data-explore-preset='${escapeHtml(JSON.stringify(s.preset))}'` : ''}>
+          <span class="tool-next-icon">${s.icon}</span>
+          <span class="tool-next-t">${escapeHtml(s.title)}</span>
+          <span class="tool-next-d">${escapeHtml(s.desc)}</span>
+        </button>`).join('')}
+      </div>
+      <div class="tool-next-advisor">Prefer a person? <button class="tool-next-link" data-explore-advisor>Talk to an advisor →</button></div>
+    </div>`;
+}
+function wireToolFooter(root) {
+  if (!root) return;
+  root.querySelectorAll('[data-explore-tool]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      let preset = {};
+      if (btn.dataset.explorePreset) { try { preset = JSON.parse(btn.dataset.explorePreset); } catch (_) {} }
+      track('tool_next', { from: 'tool_footer', tool: btn.dataset.exploreTool });
+      launchStarterTool({ tool: btn.dataset.exploreTool, title: btn.dataset.exploreTitle, preset: preset });
+    });
+  });
+  const adv = root.querySelector('[data-explore-advisor]');
+  if (adv) adv.addEventListener('click', () => openLeadModal({ source: 'tool_next' }));
 }
 // ── WHY ICHRA FAB + SLIDE-OVER ─────────────────────────────────────
 let whyFabPulseTimer = null;
@@ -2330,8 +2557,10 @@ function renderToolMessage(toolName, props) {
       <div class="msg-text">${toolName === 'show_ichra_basics' ? "Here's ICHRA in 30 seconds:" : 'Here you go:'}</div>
     </div>`;
   document.getElementById('messages').appendChild(wrap);
-  wrap.querySelector('.msg-body').appendChild(buildToolCard(toolName, props || {}));
-  scrollToBottom();
+  const toolCard = buildToolCard(toolName, props || {});
+  wrap.querySelector('.msg-body').appendChild(toolCard);
+  // Pin the tool card's top under the header so the first question reads from the start.
+  revealToolCard(toolCard);
 }
 // ── CALCULATOR WIDGET (markup + math) ───────────────────────────────
 function buildCalculator(props) {
@@ -3358,12 +3587,16 @@ function buildFitAssessment() {
     ['Other',            'other']
   ];
   return `
+    <div class="fit-progress" data-fit-progress>
+      <div class="fit-progress-track"><div class="fit-progress-fill" data-fit-fill></div></div>
+      <div class="fit-progress-label" data-fit-count>0 / 6</div>
+    </div>
     <div class="fit-question" data-fq="size">
       <div class="fit-q">How many employees do you have?</div>
       <div class="fit-options">
-        <button class="fit-opt" data-v="0">1–4</button>
-        <button class="fit-opt" data-v="2">5–49</button>
-        <button class="fit-opt" data-v="3">50+</button>
+        <button class="fit-opt" data-v="10">1–4</button>
+        <button class="fit-opt" data-v="22">5–49</button>
+        <button class="fit-opt" data-v="16">50+</button>
       </div>
     </div>
     <div class="fit-question" data-fq="industry" data-type="industry">
@@ -3375,19 +3608,19 @@ function buildFitAssessment() {
     <div class="fit-question" data-fq="situation">
       <div class="fit-q">Your current health benefits situation:</div>
       <div class="fit-options">
-        <button class="fit-opt" data-v="3">We don't offer</button>
-        <button class="fit-opt" data-v="2">Traditional group plan</button>
-        <button class="fit-opt" data-v="3">Taxable stipend</button>
+        <button class="fit-opt" data-v="22">We don't offer</button>
+        <button class="fit-opt" data-v="14">Traditional group plan</button>
+        <button class="fit-opt" data-v="20">Taxable stipend</button>
       </div>
     </div>
     <div class="fit-question" data-fq="pressure">
       <div class="fit-q">What's pushing you to look at ICHRA?</div>
       <div class="fit-options">
-        <button class="fit-opt" data-v="4">Premiums rising fast</button>
-        <button class="fit-opt" data-v="3">Multi-state team</button>
-        <button class="fit-opt" data-v="3">Hard to hit participation minimums</button>
-        <button class="fit-opt" data-v="2">Want to offer something</button>
-        <button class="fit-opt" data-v="0">Just curious</button>
+        <button class="fit-opt" data-v="20">Premiums rising fast</button>
+        <button class="fit-opt" data-v="16">Multi-state team</button>
+        <button class="fit-opt" data-v="16">Hard to hit participation minimums</button>
+        <button class="fit-opt" data-v="10">Want to offer something</button>
+        <button class="fit-opt" data-v="4">Just curious</button>
       </div>
     </div>
     <div class="fit-question" data-fq="priority" data-type="rank">
@@ -3404,19 +3637,29 @@ function buildFitAssessment() {
     <div class="fit-question" data-fq="team">
       <div class="fit-q">Your team is mostly:</div>
       <div class="fit-options">
-        <button class="fit-opt" data-v="0">Single-location, full-time</button>
-        <button class="fit-opt" data-v="3">Multi-state or remote</button>
-        <button class="fit-opt" data-v="2">Mix of FT, PT, and seasonal</button>
-        <button class="fit-opt" data-v="-2">Many likely qualify for subsidies</button>
+        <button class="fit-opt" data-v="6">Single-location, full-time</button>
+        <button class="fit-opt" data-v="16">Multi-state or remote</button>
+        <button class="fit-opt" data-v="12">Mix of FT, PT, and seasonal</button>
+        <button class="fit-opt" data-v="-6">Many likely qualify for subsidies</button>
       </div>
     </div>
-    <button class="fit-submit" data-fs disabled>See my result</button>
-    <div class="fit-result" data-fr></div>`;
+    <button class="fit-submit" data-fs disabled>Calculate my fit score <span class="fit-submit-hint" data-fs-hint>· answer all 6</span></button>
+    <div class="fit-result v2" data-fr></div>`;
 }
 function wireFitAssessment(rootEl) {
   const root = rootEl.querySelector('.tool-body');
   const answers = {};
+  const labels = {};            // human-readable chosen answer, for the score breakdown
   const total = root.querySelectorAll('[data-fq]').length;
+  const fillEl  = root.querySelector('[data-fit-fill]');
+  const countEl = root.querySelector('[data-fit-count]');
+  const hintEl  = root.querySelector('[data-fs-hint]');
+  function markAnswered(q) { if (q) q.classList.add('answered'); }
+  function updateProgress() {
+    const done = Object.keys(answers).length;
+    if (fillEl)  fillEl.style.width = Math.round((done / total) * 100) + '%';
+    if (countEl) countEl.textContent = done + ' / ' + total;
+  }
   // Pill-style questions (excludes industry tiles + rank list)
   root.querySelectorAll('.fit-question:not([data-type="industry"]):not([data-type="rank"])').forEach(q => {
     q.querySelectorAll('.fit-opt').forEach(opt => {
@@ -3424,6 +3667,9 @@ function wireFitAssessment(rootEl) {
         q.querySelectorAll('.fit-opt').forEach(o => o.classList.remove('selected'));
         opt.classList.add('selected');
         answers[q.dataset.fq] = parseInt(opt.dataset.v);
+        labels[q.dataset.fq] = opt.textContent.trim();
+        markAnswered(q);
+        updateProgress();
         maybeEnableSubmit();
       });
     });
@@ -3436,6 +3682,9 @@ function wireFitAssessment(rootEl) {
         indQ.querySelectorAll('.fit-industry').forEach(t => t.classList.remove('selected'));
         tile.classList.add('selected');
         answers.industry = tile.dataset.v;
+        labels.industry = tile.textContent.trim();
+        markAnswered(indQ);
+        updateProgress();
         maybeEnableSubmit();
       });
     });
@@ -3446,7 +3695,9 @@ function wireFitAssessment(rootEl) {
     const list = rankQ.querySelector('[data-rank-list]');
     const readOrder = () => Array.from(list.querySelectorAll('.fit-rank-item')).map(li => li.dataset.id);
     answers.priority = readOrder(); // initialize so the question counts as answered
+    markAnswered(rankQ);            // ranking has a sensible default order — counts as done
     updateRankUI();
+    updateProgress();
     function updateRankUI() {
       const items = list.querySelectorAll('.fit-rank-item');
       items.forEach((li, i) => {
@@ -3504,74 +3755,215 @@ function wireFitAssessment(rootEl) {
       });
     });
   }
+  let wasEnabled = false;
   function maybeEnableSubmit() {
     const btn = root.querySelector('[data-fs]');
-    btn.disabled = Object.keys(answers).length < total;
+    const ready = Object.keys(answers).length >= total;
+    btn.disabled = !ready;
+    if (ready && hintEl) hintEl.textContent = '· ready';
+    // On the transition into "ready", nudge the user to the button so they
+    // don't reach for the chat send box by mistake (and celebrate the unlock).
+    if (ready && !wasEnabled) {
+      btn.classList.add('ready');
+      scrollControlIntoView(btn);
+    }
+    wasEnabled = ready;
   }
   maybeEnableSubmit(); // priority already answered via default order
   root.querySelector('[data-fs]').addEventListener('click', () => {
-    // Score quant questions (industry excluded — narrative only)
-    const quant = ['size','situation','pressure','team'].map(k => answers[k] || 0);
-    let score = quant.reduce((a, b) => a + b, 0);
-    // Score the rank order
-    const order = answers.priority || [];
-    const rankOf = id => order.indexOf(id); // 0 = top
-    if (rankOf('predictability') <= 1 && rankOf('predictability') !== -1) score += 3;
-    if (rankOf('control')        <= 1 && rankOf('control')        !== -1) score += 3;
-    if (rankOf('choice')         <= 1 && rankOf('choice')         !== -1) score += 2;
-    if (rankOf('simplicity') === 0) score -= 2;
-    else if (rankOf('simplicity') >= 2) score += 1;
-    const industry = answers.industry || 'other';
-    const insightData = FIT_INDUSTRY_INSIGHTS[industry] || FIT_INDUSTRY_INSIGHTS.other;
-    const insight = insightData.blurb;
-    const stats = insightData.stats || [];
-    let tier, headline, bullets;
-    if (score >= 12) {
-      tier = ['strong', 'Strong ICHRA candidate'];
-      headline = "You're an ideal ICHRA candidate.";
-      bullets = [
-        'Your size + situation match the highest-fit profile OTB sees',
-        'A licensed advisor can model your exact contribution cost in under a week',
-        'Most employers like you save 15–30% vs traditional group, with under 30 min/month of admin'
-      ];
-    } else if (score >= 8) {
-      tier = ['good', 'Likely a good fit'];
-      headline = 'ICHRA is probably worth a serious look.';
-      bullets = [
-        'You have most of the conditions that make ICHRA work well',
-        'Worth running the contribution math against your current spend',
-        'A 20-minute call with an advisor would clarify the path forward'
-      ];
-    } else if (score >= 4) {
-      tier = ['maybe', 'Worth a conversation'];
-      headline = "There's a case here — but it depends.";
-      bullets = [
-        "ICHRA could help, but the case isn't airtight from these answers alone",
-        'A custom assessment would tell you more',
-        'Compare against your current renewal increases'
-      ];
-    } else {
-      tier = ['no', 'Probably not the right fit'];
-      headline = 'Right now, ICHRA may not be your best move.';
-      bullets = [
-        'Your situation suggests sticking with your current setup',
-        'Re-check ICHRA if your renewal pricing spikes',
-        'Stipends or QSEHRA may be more relevant alternatives'
-      ];
-    }
-    const result = root.querySelector('[data-fr]');
-    const indCap = industry === 'nonprofit' ? 'Non-profit' : industry.charAt(0).toUpperCase()+industry.slice(1);
-    const statsHTML = stats.length ? `<div class="fit-industry-stats">${stats.map(([n,l]) => `<div class="fit-stat"><div class="fit-stat-n">${n}</div><div class="fit-stat-l">${l}</div></div>`).join('')}</div>` : '';
-    result.innerHTML = `
-      <span class="fit-tier ${tier[0]}">${tier[1]}</span>
-      <h5>${headline}</h5>
-      <div class="fit-industry-note"><strong>${indCap}.</strong> ${insight}</div>
-      ${statsHTML}
-      <ul>${bullets.map(b => `<li>${b}</li>`).join('')}</ul>
-    `;
-    result.classList.add('show');
-    scrollToBottom();
+    const result = renderFitResult(root, answers, labels);
+    // Reveal the score (top of the result), not the page bottom, so the gauge
+    // and headline are the first things the user sees.
+    requestAnimationFrame(() => scrollControlIntoView(result, 90));
   });
+}
+// ── Fit scoring engine + result render (transparent, gamified) ──────
+const FIT_FACTORS = {
+  size:      { label: 'Company size',      max: 22 },
+  situation: { label: 'Current benefits',  max: 22 },
+  pressure:  { label: 'Main driver',       max: 20 },
+  team:      { label: 'Team make-up',      max: 16, min: -6 }
+};
+const FIT_RANK_LABELS = {
+  predictability: 'cost predictability',
+  control:        'budget control',
+  choice:         'employee plan choice',
+  simplicity:     'low-touch admin',
+  competitive:    'competitive benefits'
+};
+function computeFitScore(answers) {
+  const rows = [];
+  ['size','situation','pressure','team'].forEach(k => {
+    const f = FIT_FACTORS[k];
+    rows.push({ key: k, label: f.label, pts: answers[k] || 0, max: f.max, min: f.min || 0 });
+  });
+  // Rank-order contribution (max +16, floor -4)
+  const order = answers.priority || [];
+  const rankOf = id => order.indexOf(id);
+  const pred = rankOf('predictability'), ctrl = rankOf('control'),
+        choice = rankOf('choice'), simp = rankOf('simplicity');
+  let rankPts = 0;
+  if (pred === 0 || ctrl === 0) rankPts += 8;
+  else if (pred <= 1 || ctrl <= 1) rankPts += 5;
+  if (choice >= 0 && choice <= 1) rankPts += 4;
+  if (simp === 0) rankPts -= 4;
+  rankPts = Math.max(-4, Math.min(16, rankPts));
+  const topPriority = FIT_RANK_LABELS[order[0]] || 'your priorities';
+  rows.push({ key: 'priority', label: 'What you value most', pts: rankPts, max: 16, min: -4, note: 'You ranked ' + topPriority + ' at the top' });
+  let raw = rows.reduce((a, r) => a + r.pts, 0);
+  const score = Math.max(0, Math.min(100, raw));
+  let tier;
+  if (score >= 72)      tier = 'strong';
+  else if (score >= 52) tier = 'good';
+  else if (score >= 34) tier = 'maybe';
+  else                  tier = 'no';
+  const peer = Math.max(5, Math.min(97, Math.round(score * 0.9)));
+  return { score, tier, peer, rows };
+}
+const FIT_TIER_META = {
+  strong: { label: 'Strong ICHRA candidate', color: 'var(--green)',  headline: "You're an ideal ICHRA candidate.",
+    blurb: 'Your size and situation line up with the highest-fit profile OTB sees. An advisor can model your exact contribution cost in under a week — most employers like you save 15–30% vs. traditional group, with under 30 min/month of admin.',
+    cta: 'Book a 20-min ICHRA review', confetti: true },
+  good: { label: 'Likely a good fit', color: 'var(--accent-deep)', headline: 'ICHRA is well worth a serious look.',
+    blurb: 'You have most of the conditions that make ICHRA work well. The next step is running the contribution math against your current spend — a short call with an advisor would map the path.',
+    cta: 'Talk through the numbers', confetti: true },
+  maybe: { label: 'Worth a conversation', color: 'var(--amber)', headline: "There's a real case here — it depends on the details.",
+    blurb: "ICHRA could help, but it isn't airtight from these answers alone. A custom assessment against your current renewal increases would tell you whether the math works.",
+    cta: 'Get a custom assessment', confetti: false },
+  no: { label: 'Probably not yet', color: 'var(--ink-soft)', headline: 'Right now, ICHRA may not be your best move.',
+    blurb: 'Your situation suggests staying with your current setup for now. Stipends or QSEHRA may fit better today — and ICHRA is worth a fresh look if your renewal pricing spikes.',
+    cta: 'Email me if my renewal spikes', confetti: false }
+};
+function renderFitResult(root, answers, labels) {
+  const { score, tier, peer, rows } = computeFitScore(answers);
+  const meta = FIT_TIER_META[tier];
+  const industry = answers.industry || 'other';
+  const insightData = FIT_INDUSTRY_INSIGHTS[industry] || FIT_INDUSTRY_INSIGHTS.other;
+  const stats = insightData.stats || [];
+  const indCap = industry === 'nonprofit' ? 'Non-profit' : industry.charAt(0).toUpperCase() + industry.slice(1);
+  const statsHTML = stats.length ? `<div class="fit-industry-stats">${stats.map(([n,l]) => `<div class="fit-stat"><div class="fit-stat-n">${escapeHtml(n)}</div><div class="fit-stat-l">${escapeHtml(l)}</div></div>`).join('')}</div>` : '';
+  // Breakdown rows: bar width is share of that factor's positive range
+  const bdHTML = rows.map(r => {
+    const sign = r.pts > 0 ? 'pos' : (r.pts < 0 ? 'neg' : 'zero');
+    const ptsTxt = (r.pts > 0 ? '+' : '') + r.pts + ' pt' + (Math.abs(r.pts) === 1 ? '' : 's');
+    const pct = r.max > 0 ? Math.max(0, Math.min(100, Math.round((r.pts / r.max) * 100))) : 0;
+    const sub = r.note ? r.note : (labels[r.key] || '');
+    return `<div class="fit-bd-row">
+        <div class="fit-bd-label">${escapeHtml(r.label)}${sub ? `<small>${escapeHtml(sub)}</small>` : ''}</div>
+        <div class="fit-bd-pts ${sign}">${ptsTxt}</div>
+        <div class="fit-bd-bar"><i class="${r.pts < 0 ? 'neg' : ''}" data-w="${r.pts < 0 ? 12 : pct}"></i></div>
+      </div>`;
+  }).join('');
+  const ctaHTML = `<div class="fit-cta"><button class="fit-cta-btn primary" data-fit-cta>${escapeHtml(meta.cta)} →</button></div>`;
+  const result = root.querySelector('[data-fr]');
+  result.innerHTML = `
+    <div class="fit-scoreboard">
+      <div class="fit-gauge">
+        <svg viewBox="0 0 120 70" aria-hidden="true">
+          <path d="M10,64 A50,50 0 0 1 110,64" fill="none" stroke="var(--line)" stroke-width="10" stroke-linecap="round" pathLength="100"></path>
+          <path d="M10,64 A50,50 0 0 1 110,64" fill="none" stroke="${meta.color}" stroke-width="10" stroke-linecap="round" pathLength="100" data-gauge-arc style="stroke-dasharray:0 100;transition:stroke-dasharray 1.1s cubic-bezier(.2,.7,.3,1)"></path>
+        </svg>
+        <div class="fit-gauge-num"><b data-gauge-num>0</b><small>fit score</small></div>
+      </div>
+      <div class="fit-scoreboard-meta">
+        <span class="fit-tier v2 ${tier}">${escapeHtml(meta.label)}</span>
+        <h5>${escapeHtml(meta.headline)}</h5>
+        <div class="fit-peer">You scored higher than <b>~${peer}%</b> of employers who take this assessment.</div>
+      </div>
+    </div>
+    <div class="fit-industry-note"><strong>${escapeHtml(indCap)}.</strong> ${escapeHtml(insightData.blurb)}</div>
+    ${statsHTML}
+    <div class="fit-breakdown">
+      <div class="fit-breakdown-head">Why you scored ${score}</div>
+      ${bdHTML}
+    </div>
+    <p style="font-size:13px;color:var(--ink-dim);line-height:1.6;margin:14px 0 0">${escapeHtml(meta.blurb)}</p>
+    ${ctaHTML}
+    <button class="fit-redo" data-fit-redo>↺ Retake the assessment</button>
+    ${buildToolFooterHTML('show_fit_assessment')}
+  `;
+  result.classList.add('show');
+  // Wire result buttons
+  const ctaBtn = result.querySelector('[data-fit-cta]');
+  if (ctaBtn) ctaBtn.addEventListener('click', () => openLeadModal({ source: 'fit_' + tier }));
+  wireToolFooter(result);
+  const redoBtn = result.querySelector('[data-fit-redo]');
+  if (redoBtn) redoBtn.addEventListener('click', () => {
+    const body = root;
+    body.innerHTML = buildFitAssessment();
+    wireFitAssessment(root.closest('.tool-card') || root.parentElement);
+    requestAnimationFrame(() => scrollControlIntoView(body, 90));
+  });
+  // Animate the gauge fill + number count-up (respecting reduced motion)
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const arc = result.querySelector('[data-gauge-arc]');
+  const numEl = result.querySelector('[data-gauge-num]');
+  if (arc) requestAnimationFrame(() => { arc.style.strokeDasharray = score + ' 100'; });
+  if (numEl) {
+    if (reduce) { numEl.textContent = score; }
+    else {
+      const t0 = performance.now(), dur = 1100;
+      const tick = (t) => {
+        const p = Math.min(1, (t - t0) / dur);
+        const eased = 1 - Math.pow(1 - p, 3);
+        numEl.textContent = Math.round(eased * score);
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+  }
+  // Animate breakdown bars in
+  requestAnimationFrame(() => result.querySelectorAll('.fit-bd-bar i').forEach(i => { i.style.width = (i.dataset.w || 0) + '%'; }));
+  // Celebrate strong/good results
+  if (meta.confetti) fireConfetti();
+  // Log the outcome for the engagement dashboard
+  try { track('fit_result', { score: score, tier: tier, industry: industry, employees: labels.size || null }); } catch (_) {}
+  return result;
+}
+// ── Lightweight self-contained confetti (no external libs) ──────────
+function fireConfetti() {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const canvas = document.createElement('canvas');
+  canvas.className = 'fit-confetti-canvas';
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const resize = () => { canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr; ctx.setTransform(dpr,0,0,dpr,0,0); };
+  resize();
+  const colors = ['#B0532F','#8C3F22','#4B6E4D','#8B6A1F','#5A4F75','#1A1A1A'];
+  const N = 130;
+  const parts = [];
+  for (let i = 0; i < N; i++) {
+    parts.push({
+      x: innerWidth * (0.2 + Math.random() * 0.6),
+      y: innerHeight * 0.32 + (Math.random() - 0.5) * 60,
+      vx: (Math.random() - 0.5) * 7,
+      vy: -8 - Math.random() * 7,
+      g: 0.28 + Math.random() * 0.12,
+      size: 5 + Math.random() * 6,
+      rot: Math.random() * Math.PI,
+      vrot: (Math.random() - 0.5) * 0.4,
+      color: colors[(Math.random() * colors.length) | 0],
+      shape: Math.random() < 0.5 ? 'rect' : 'circle'
+    });
+  }
+  const start = performance.now(), life = 1900;
+  function frame(now) {
+    const elapsed = now - start;
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    parts.forEach(p => {
+      p.vy += p.g; p.x += p.vx; p.y += p.vy; p.rot += p.vrot; p.vx *= 0.99;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+      ctx.globalAlpha = Math.max(0, 1 - elapsed / life);
+      ctx.fillStyle = p.color;
+      if (p.shape === 'rect') ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size * 0.6);
+      else { ctx.beginPath(); ctx.arc(0, 0, p.size/2, 0, Math.PI*2); ctx.fill(); }
+      ctx.restore();
+    });
+    if (elapsed < life) requestAnimationFrame(frame);
+    else canvas.remove();
+  }
+  requestAnimationFrame(frame);
 }
 // ── LEAD CAPTURE WIDGET ────────────────────────────────────────────
 function buildLeadCapture(props) {
