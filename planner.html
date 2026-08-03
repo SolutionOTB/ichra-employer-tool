@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coverage and Savings Planner | SolutionOTB</title>
+<style>
+:root{
+  --aflac-blue:#00A7E1; --aflac-gray:#7D7D7D; --aflac-orange:#F89728; --aflac-red:#C41200;
+  --deep:#0B5D8A; --ink:#1D1D1F; --slate:#5B6B7B; --line:#E5EAEE; --tint:#F5FAFD;
+  --good:#1E7B4F; --surface:#FFFFFF;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Proxima Nova","Helvetica Neue",Arial,sans-serif;color:var(--ink);background:var(--tint);line-height:1.5}
+.wrap{max-width:880px;margin:0 auto;padding:0 20px 80px}
+header.site{background:var(--surface);border-bottom:3px solid var(--aflac-blue);padding:18px 0;margin-bottom:28px}
+header.site .wrap{padding-bottom:0;display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:6px}
+header.site h1{font-size:1.25rem;font-weight:700}
+header.site .tag{color:var(--slate);font-size:.85rem}
+h2{font-size:1.35rem;margin:0 0 6px;font-weight:700}
+h3{font-size:1.05rem;margin:0 0 8px;font-weight:700}
+.sub{color:var(--slate);font-size:.92rem;margin-bottom:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px;margin-bottom:20px}
+.step-dots{display:flex;gap:8px;margin-bottom:22px}
+.step-dots span{height:6px;flex:1;border-radius:3px;background:var(--line)}
+.step-dots span.on{background:var(--aflac-blue)}
+label.q{display:block;font-weight:600;margin:16px 0 6px}
+label.q:first-of-type{margin-top:0}
+.hint{font-size:.82rem;color:var(--slate);font-weight:400;margin-top:2px}
+input[type=text],input[type=number],select{width:100%;max-width:340px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:1rem;background:#fff}
+input:focus,select:focus{outline:2px solid var(--aflac-blue);border-color:var(--aflac-blue)}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.opts button{padding:10px 16px;border:1.5px solid var(--line);background:#fff;border-radius:8px;font-size:.95rem;cursor:pointer;color:var(--ink)}
+.opts button.sel{border-color:var(--aflac-blue);background:var(--tint);font-weight:600}
+.opts.multi button.sel{border-color:var(--deep)}
+.row{display:flex;gap:16px;flex-wrap:wrap}
+.row>div{flex:1;min-width:150px}
+.nav{display:flex;justify-content:space-between;margin-top:26px}
+.btn{padding:12px 26px;border-radius:8px;border:none;font-size:1rem;font-weight:600;cursor:pointer}
+.btn.primary{background:var(--aflac-blue);color:#fff}
+.btn.primary:hover{background:var(--deep)}
+.btn.ghost{background:none;border:1.5px solid var(--line);color:var(--slate)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.pill{display:inline-block;padding:3px 12px;border-radius:999px;font-size:.78rem;font-weight:700;letter-spacing:.02em}
+.pill.good{background:#E7F4EC;color:var(--good)}
+.pill.blue{background:var(--tint);color:var(--deep)}
+.pill.warn{background:#FDF1E2;color:#9A5B00}
+.hero{background:var(--deep);color:#fff;border-radius:12px;padding:28px;margin-bottom:20px}
+.hero .big{font-size:2.4rem;font-weight:800;line-height:1.1}
+.hero .lbl{opacity:.85;font-size:.9rem}
+.hero .row{margin-top:14px}
+.statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:14px 0}
+.stat{background:var(--tint);border:1px solid var(--line);border-radius:10px;padding:14px}
+.stat .v{font-size:1.5rem;font-weight:800;color:var(--deep)}
+.stat .l{font-size:.8rem;color:var(--slate)}
+.barrow{display:flex;align-items:center;gap:10px;margin:7px 0}
+.barrow .lab{width:150px;font-size:.85rem;color:var(--slate);text-align:right;flex-shrink:0}
+.barrow .trk{flex:1;background:var(--tint);border-radius:4px;height:26px;position:relative}
+.barrow .fill{height:100%;border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;color:#fff;font-size:.8rem;font-weight:700;min-width:52px}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin:10px 0 4px;font-size:.83rem;color:var(--slate)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.yr{border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden;background:#fff}
+.yr .yhead{display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--tint);flex-wrap:wrap}
+.yr .ynum{background:var(--aflac-blue);color:#fff;font-weight:800;border-radius:8px;padding:6px 12px;font-size:.95rem}
+.yr .ymeta{font-size:.85rem;color:var(--slate)}
+.yr .ybody{padding:14px 18px}
+.move{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+.move:last-child{border-bottom:none}
+.move .k{flex-shrink:0;width:84px;text-align:center;font-size:.72rem;font-weight:800;letter-spacing:.04em;border-radius:6px;padding:5px 0;text-transform:uppercase}
+.move .k.add{background:var(--tint);color:var(--deep)}
+.move .k.upgrade{background:#FDF1E2;color:#9A5B00}
+.move .k.rider{background:#EDF7ED;color:var(--good)}
+.move .k.swap{background:#F3EDF7;color:#5B3E7A}
+.move .k.life{background:#0B5D8A;color:#fff}
+.move .d{flex:1}
+.move .d b{font-size:.95rem}
+.move .d p{font-size:.85rem;color:var(--slate);margin-top:2px}
+.move .c{font-weight:800;color:var(--deep);white-space:nowrap}
+.filed{margin-top:8px;background:var(--tint);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.filed-h{font-size:.72rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--deep);margin-bottom:4px}
+.filed ul{margin:0;padding-left:16px}
+.filed li{font-size:.82rem;color:var(--ink);margin:2px 0}
+.filed-src{font-size:.72rem;color:var(--slate);margin-top:5px}
+.alloc{display:flex;gap:14px;font-size:.83rem;color:var(--slate);margin-top:10px;flex-wrap:wrap}
+.alloc b{color:var(--ink)}
+svg text{font-family:inherit}
+.tbltoggle{font-size:.82rem;color:var(--deep);background:none;border:none;cursor:pointer;text-decoration:underline;padding:4px 0}
+table.dv{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:8px}
+table.dv th,table.dv td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:right}
+table.dv th:first-child,table.dv td:first-child{text-align:left}
+table.dv th{color:var(--slate);font-weight:600}
+.src{font-size:.78rem;color:var(--slate);margin-top:10px}
+.disc{font-size:.78rem;color:var(--slate);border-top:1px solid var(--line);padding-top:14px;margin-top:8px}
+.alert{background:#FDF1E2;border:1px solid #F0D9B5;border-radius:10px;padding:14px 16px;font-size:.9rem;margin:12px 0}
+.empty{background:var(--tint);border:1.5px dashed var(--line);border-radius:10px;padding:22px;text-align:center;color:var(--slate);font-size:.92rem;margin:12px 0}
+.hidden{display:none}
+.kidsages{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.kidsages input{width:76px}
+footer{font-size:.75rem;color:var(--slate);max-width:880px;margin:0 auto;padding:0 20px 40px}
+@media (max-width:640px){ .barrow .lab{width:100px} .hero .big{font-size:1.8rem} }
+</style>
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <h1>Coverage and savings planner</h1>
+  <div class="tag">A decision support tool from SolutionOTB</div>
+</div></header>
+<div class="wrap">
+
+  <!-- ======================= WIZARD ======================= -->
+  <div id="wizard">
+    <div class="step-dots" id="dots"></div>
+
+    <!-- Step 1: household -->
+    <div class="card step" data-step="0">
+      <h2>Your household</h2>
+      <p class="sub">This sets the coverage tier every number in the plan is priced on.</p>
+      <div class="row">
+        <div><label class="q">ZIP code</label><input type="text" id="zip" inputmode="numeric" maxlength="5" placeholder="37201"></div>
+        <div><label class="q">Your age</label><input type="number" id="age1" min="18" max="74" placeholder="38"></div>
+      </div>
+      <label class="q">Who needs coverage?</label>
+      <div class="opts" id="hh"></div>
+      <div id="spouseRow" class="hidden"><label class="q">Spouse or partner age</label><input type="number" id="age2" min="18" max="74" placeholder="36"></div>
+      <div id="kidsRow" class="hidden">
+        <label class="q">How many children? <span class="hint">Ages help size dental and life needs.</span></label>
+        <input type="number" id="kids" min="1" max="8" value="1">
+        <div class="kidsages" id="kidsAges"></div>
+      </div>
+      <div class="nav"><span></span><button class="btn primary" onclick="next()">Continue</button></div>
+    </div>
+
+    <!-- Step 2: plans -->
+    <div class="card step hidden" data-step="1">
+      <h2>Your two health plan choices</h2>
+      <p class="sub">We compare a Gold plan against a Bronze plan that is HSA eligible (a high deductible health plan). The difference in premium is the budget this plan puts to work.</p>
+      <div id="hsLive">
+        <button class="btn primary" id="hsPull" onclick="pullPlans()">Pull plans for my ZIP</button>
+        <div id="hsStatus" class="src"></div>
+        <div id="hsEmpty" class="empty hidden">Live plan pricing is unavailable right now. No estimates are shown in its place. Enter the numbers from your own quote screen below, or try again later.</div>
+      </div>
+      <div id="manualEntry">
+        <h3 style="margin-top:18px">Enter your quote numbers</h3>
+        <p class="hint">Copy these from your marketplace or HealthSherpa quote screen. Use monthly premiums after any subsidy.</p>
+        <div class="row">
+          <div><label class="q">Gold plan monthly premium</label><input type="number" id="goldMo" min="0" placeholder="1650"></div>
+          <div><label class="q">Gold plan deductible</label><input type="number" id="goldDed" min="0" placeholder="1500"></div>
+        </div>
+        <div class="row">
+          <div><label class="q">Bronze HSA eligible monthly premium</label><input type="number" id="bronzeMo" min="0" placeholder="1150"></div>
+          <div><label class="q">Bronze deductible</label><input type="number" id="bronzeDed" min="0" placeholder="7000"></div>
+          <div><label class="q">Bronze out of pocket maximum</label><input type="number" id="bronzeOop" min="0" placeholder="15000"></div>
+        </div>
+      </div>
+      <div class="nav"><button class="btn ghost" onclick="back()">Back</button><button class="btn primary" onclick="next()">Continue</button></div>
+    </div>
+
+    <!-- Step 3: risk profile -->
+    <div class="card step hidden" data-step="2">
+      <h2>What should this plan protect against?</h2>
+      <p class="sub">Honest answers here drive which products the plan reaches for first.</p>
+      <label class="q">If you had to pay your Bronze deductible today, could you?</label>
+      <div class="opts" id="afford"></div>
+      <label class="q">Any family history you think about? <span class="hint">Choose all that apply.</span></label>
+      <div class="opts multi" id="hist"></div>
+      <label class="q">Which of these sound like your household? <span class="hint">Choose all that apply.</span></label>
+      <div class="opts multi" id="lifestyle"></div>
+      <label class="q">If an illness or injury kept you out of work, would your income stop?</label>
+      <div class="opts" id="incomeStop"></div>
+      <label class="q">Dental and vision <span class="hint">Choose all that apply.</span></label>
+      <div class="opts multi" id="dv"></div>
+      <div class="nav"><button class="btn ghost" onclick="back()">Back</button><button class="btn primary" onclick="next()">Continue</button></div>
+    </div>
+
+    <!-- Step 4: life -->
+    <div class="card step hidden" data-step="3">
+      <h2>Life insurance</h2>
+      <p class="sub">Laddering means buying protection in layers over time instead of one big policy on day one.</p>
+      <label class="q">Do you have life insurance today?</label>
+      <div class="opts" id="lifeToday"></div>
+      <label class="q">If something happened to you, how many years of your income would your family need?</label>
+      <div class="opts" id="lifeYears"></div>
+      <label class="q">Roughly, your annual household income</label>
+      <div class="opts" id="incomeBand"></div>
+      <div class="nav"><button class="btn ghost" onclick="back()">Back</button><button class="btn primary" onclick="next()">Continue</button></div>
+    </div>
+
+    <!-- Step 5: plan settings -->
+    <div class="card step hidden" data-step="4">
+      <h2>Plan settings</h2>
+      <p class="sub">You control how much of the premium savings goes to work, and for how long.</p>
+      <label class="q">How much of the monthly savings will you commit to protection and saving?</label>
+      <div class="opts" id="commit"></div>
+      <label class="q">Planning horizon</label>
+      <div class="opts" id="horizon"></div>
+      <label class="q">Assumed yearly growth in health premiums <span class="hint">Both plans grow together, so the gap grows too. KFF reported sharp 2026 increases; the long run average is lower.</span></label>
+      <div class="opts" id="trend"></div>
+      <label class="q">Assumed yearly return on invested HSA dollars</label>
+      <div class="opts" id="hsaRet"></div>
+      <div class="nav"><button class="btn ghost" onclick="back()">Back</button><button class="btn primary" onclick="buildPlan()">Build my plan</button></div>
+    </div>
+  </div>
+
+  <!-- ======================= RESULTS ======================= -->
+  <div id="results" class="hidden"></div>
+
+</div>
+<footer id="foot"></footer>
+<script>
+const CATALOG = {
+ "meta": {
+  "basis": "Illustrative monthly averages derived from an Aflac TN payroll Class A rate sheet pulled 2026-07-31. Not a quote. Actual rates vary by age band, state, and industry class and are subject to change.",
+  "state": "TN",
+  "class": "A",
+  "pull_date": "2026-07-31"
+ },
+ "products": [
+  {
+   "id": "cancer",
+   "label": "Cancer Protection Assurance",
+   "category": "cancer",
+   "age_note": "flat 18-75",
+   "options": [
+    {
+     "id": "opt1",
+     "label": "Option 1",
+     "series": "B70100",
+     "base": {
+      "individual": 18,
+      "insured_spouse": 29,
+      "one_parent_family": 18,
+      "two_parent_family": 29
+     }
+    },
+    {
+     "id": "opt2",
+     "label": "Option 2",
+     "series": "B70200",
+     "base": {
+      "individual": 35,
+      "insured_spouse": 60,
+      "one_parent_family": 35,
+      "two_parent_family": 60
+     }
+    },
+    {
+     "id": "opt3",
+     "label": "Option 3",
+     "series": "B70300",
+     "base": {
+      "individual": 49,
+      "insured_spouse": 84,
+      "one_parent_family": 49,
+      "two_parent_family": 84
+     }
+    }
+   ],
+   "riders": [
+    {
+     "id": "IDR",
+     "label": "Initial Diagnosis Rider",
+     "adds": {
+      "individual": 6,
+      "insured_spouse": 14,
+      "one_parent_family": 6,
+      "two_parent_family": 14
+     },
+     "highlight": "Pays an extra lump sum on first diagnosis of internal cancer."
+    },
+    {
+     "id": "SDR",
+     "label": "Specified Disease Rider",
+     "adds": {
+      "individual": 1,
+      "insured_spouse": 1,
+      "one_parent_family": 1,
+      "two_parent_family": 1
+     },
+     "highlight": "Extends coverage to a list of specified diseases beyond cancer."
+    },
+    {
+     "id": "DCR",
+     "label": "Dependent Child Rider ($10,000)",
+     "adds": {
+      "individual": 0,
+      "insured_spouse": 0,
+      "one_parent_family": 1,
+      "two_parent_family": 1
+     },
+     "highlight": "Adds a $10,000 child benefit.",
+     "family_only": true
+    }
+   ]
+  },
+  {
+   "id": "accident",
+   "label": "Accident Insurance (24 hour)",
+   "category": "accident",
+   "age_note": "flat 18-75",
+   "series": "A38000",
+   "options": [
+    {
+     "id": "opt1",
+     "label": "Option 1",
+     "base": {
+      "individual": 19,
+      "insured_spouse": 28,
+      "one_parent_family": 33,
+      "two_parent_family": 43
+     }
+    },
+    {
+     "id": "opt2",
+     "label": "Option 2",
+     "base": {
+      "individual": 25,
+      "insured_spouse": 35,
+      "one_parent_family": 41,
+      "two_parent_family": 54
+     }
+    },
+    {
+     "id": "opt3",
+     "label": "Option 3",
+     "base": {
+      "individual": 28,
+      "insured_spouse": 40,
+      "one_parent_family": 48,
+      "two_parent_family": 63
+     }
+    }
+   ],
+   "riders": []
+  },
+  {
+   "id": "hospital",
+   "label": "Hospital Choice",
+   "category": "hospital",
+   "age_note": "3 age bands averaged",
+   "series": "B40100",
+   "options": [
+    {
+     "id": "ha500",
+     "label": "$500 admission benefit",
+     "base": {
+      "individual": 17,
+      "insured_spouse": 23,
+      "one_parent_family": 22,
+      "two_parent_family": 25
+     }
+    },
+    {
+     "id": "ha1000",
+     "label": "$1,000 admission benefit",
+     "base": {
+      "individual": 27,
+      "insured_spouse": 39,
+      "one_parent_family": 34,
+      "two_parent_family": 41
+     }
+    },
+    {
+     "id": "ha1500",
+     "label": "$1,500 admission benefit",
+     "base": {
+      "individual": 38,
+      "insured_spouse": 58,
+      "one_parent_family": 47,
+      "two_parent_family": 58
+     }
+    },
+    {
+     "id": "ha2000",
+     "label": "$2,000 admission benefit",
+     "base": {
+      "individual": 51,
+      "insured_spouse": 79,
+      "one_parent_family": 61,
+      "two_parent_family": 79
+     }
+    }
+   ],
+   "riders": [
+    {
+     "id": "EBR",
+     "label": "Extended Benefit Rider",
+     "adds": {
+      "individual": 12,
+      "insured_spouse": 26,
+      "one_parent_family": 23,
+      "two_parent_family": 30
+     },
+     "highlight": "Extends daily hospital benefits for longer stays."
+    },
+    {
+     "id": "HSSCR",
+     "label": "Hospital Stay and Surgical Care Rider",
+     "adds": {
+      "individual": 23,
+      "insured_spouse": 45,
+      "one_parent_family": 30,
+      "two_parent_family": 46
+     },
+     "highlight": "Adds daily hospital stay and surgical/anesthesia benefits."
+    }
+   ]
+  },
+  {
+   "id": "critcare",
+   "label": "Critical Care and Recovery",
+   "category": "critical",
+   "age_note": "4 age bands",
+   "options": [
+    {
+     "id": "level_one",
+     "label": "Level 1",
+     "series": "A71100",
+     "base": {
+      "individual": 17,
+      "insured_spouse": 29,
+      "one_parent_family": 18,
+      "two_parent_family": 31
+     },
+     "base_by_band": {
+      "individual": {
+       "18-35": 9,
+       "36-45": 14,
+       "46-55": 20,
+       "56-70": 27
+      },
+      "insured_spouse": {
+       "18-35": 13,
+       "36-45": 22,
+       "46-55": 32,
+       "56-70": 48
+      },
+      "one_parent_family": {
+       "18-35": 10,
+       "36-45": 15,
+       "46-55": 20,
+       "56-70": 27
+      },
+      "two_parent_family": {
+       "18-35": 15,
+       "36-45": 24,
+       "46-55": 35,
+       "56-70": 51
+      }
+     }
+    },
+    {
+     "id": "level_two",
+     "label": "Level 2",
+     "series": "A71200",
+     "base": {
+      "individual": 28,
+      "insured_spouse": 51,
+      "one_parent_family": 40,
+      "two_parent_family": 56
+     },
+     "base_by_band": {
+      "individual": {
+       "18-35": 16,
+       "36-45": 23,
+       "46-55": 32,
+       "56-70": 41
+      },
+      "insured_spouse": {
+       "18-35": 32,
+       "36-45": 41,
+       "46-55": 55,
+       "56-70": 77
+      },
+      "one_parent_family": {
+       "18-35": 28,
+       "36-45": 33,
+       "46-55": 43,
+       "56-70": 56
+      },
+      "two_parent_family": {
+       "18-35": 36,
+       "36-45": 46,
+       "46-55": 61,
+       "56-70": 84
+      }
+     }
+    }
+   ],
+   "riders": [
+    {
+     "id": "FOBBR",
+     "label": "First Occurrence Building Benefit Rider",
+     "adds": {
+      "individual": 4,
+      "insured_spouse": 9,
+      "one_parent_family": 5,
+      "two_parent_family": 9
+     },
+     "highlight": "Benefit grows $500 each year before a first occurrence."
+    },
+    {
+     "id": "PSHERR",
+     "label": "Recovery Rider",
+     "adds": {
+      "individual": 4,
+      "insured_spouse": 7,
+      "one_parent_family": 4,
+      "two_parent_family": 7
+     },
+     "highlight": "Adds monthly recovery benefits after a covered health event."
+    }
+   ]
+  },
+  {
+   "id": "lsci",
+   "label": "Lump Sum Critical Illness ($10,000 base)",
+   "category": "critical",
+   "age_note": "10 age bands",
+   "options": [
+    {
+     "id": "base10k",
+     "label": "$10,000 benefit",
+     "base": {
+      "individual": 13,
+      "one_parent_family": 13,
+      "insured_spouse": 21,
+      "two_parent_family": 21
+     },
+     "base_by_band": {
+      "individual": {
+       "18-24": 4,
+       "25-29": 5,
+       "30-34": 6,
+       "35-39": 9,
+       "40-44": 11,
+       "45-49": 14,
+       "50-54": 16,
+       "55-59": 18,
+       "60-64": 22,
+       "65-70": 22
+      },
+      "insured_spouse": {
+       "18-24": 7,
+       "25-29": 8,
+       "30-34": 11,
+       "35-39": 14,
+       "40-44": 17,
+       "45-49": 21,
+       "50-54": 25,
+       "55-59": 30,
+       "60-64": 37,
+       "65-70": 37
+      }
+     }
+    }
+   ],
+   "riders": [
+    {
+     "id": "LSCBR",
+     "label": "Lump Sum Cancer Benefit Rider",
+     "adds": {
+      "individual": 11,
+      "one_parent_family": 11,
+      "insured_spouse": 17,
+      "two_parent_family": 17
+     },
+     "highlight": "Adds a lump sum cancer benefit to the critical illness policy."
+    }
+   ]
+  },
+  {
+   "id": "dental",
+   "label": "Dental",
+   "category": "dental",
+   "age_note": "flat 18-70",
+   "options": [
+    {
+     "id": "essentials",
+     "label": "Essentials",
+     "series": "A-82100R",
+     "base": {
+      "individual": 24,
+      "insured_spouse": 42,
+      "one_parent_family": 42,
+      "two_parent_family": 61
+     }
+    },
+    {
+     "id": "level_1",
+     "label": "Level 1",
+     "series": "A-82200R",
+     "base": {
+      "individual": 31,
+      "insured_spouse": 61,
+      "one_parent_family": 60,
+      "two_parent_family": 91
+     }
+    },
+    {
+     "id": "level_2",
+     "label": "Level 2",
+     "series": "A-82300R",
+     "base": {
+      "individual": 38,
+      "insured_spouse": 75,
+      "one_parent_family": 75,
+      "two_parent_family": 112
+     }
+    },
+    {
+     "id": "level_3",
+     "label": "Level 3",
+     "series": "A-82400R",
+     "base": {
+      "individual": 56,
+      "insured_spouse": 110,
+      "one_parent_family": 109,
+      "two_parent_family": 164
+     }
+    }
+   ],
+   "riders": []
+  },
+  {
+   "id": "vision",
+   "label": "Vision Now",
+   "category": "vision",
+   "age_note": "3 age bands averaged",
+   "options": [
+    {
+     "id": "vsn",
+     "label": "Vision Now",
+     "base": {
+      "individual": 20,
+      "insured_spouse": 34,
+      "one_parent_family": 27,
+      "two_parent_family": 39
+     }
+    }
+   ],
+   "riders": []
+  },
+  {
+   "id": "std",
+   "label": "Short Term Disability ($5,000/mo benefit)",
+   "category": "income",
+   "age_note": "3 age bands",
+   "options": [
+    {
+     "id": "econ",
+     "label": "0/30 elimination, 6 month benefit",
+     "base": {
+      "individual": 104
+     },
+     "base_by_band": {
+      "individual": {
+       "18-49": 78,
+       "50-64": 104,
+       "65-74": 130
+      }
+     }
+    },
+    {
+     "id": "fast",
+     "label": "7/14 elimination, 3 month benefit",
+     "base": {
+      "individual": 102
+     },
+     "base_by_band": {
+      "individual": {
+       "18-49": 91,
+       "50-64": 98,
+       "65-74": 117
+      }
+     }
+    }
+   ],
+   "riders": [],
+   "individual_only": true
+  },
+  {
+   "id": "life",
+   "label": "Life Insurance (ladder rungs, per $100,000 face)",
+   "category": "life",
+   "basis": "Interpolated from non-tobacco male endpoints ages 18 and 50; illustrative only, never a quote.",
+   "rungs": {
+    "life_solutions_10yr_term": {
+     "label": "10 year term",
+     "per100k_by_age": {
+      "20": 13.21,
+      "25": 17.24,
+      "30": 21.27,
+      "35": 25.31,
+      "40": 29.34,
+      "45": 33.37,
+      "50": 37.4
+     }
+    },
+    "life_solutions_20yr_term": {
+     "label": "20 year term",
+     "per100k_by_age": {
+      "20": 15.6,
+      "25": 23.6,
+      "30": 31.6,
+      "35": 39.6,
+      "40": 47.6,
+      "45": 55.6,
+      "50": 63.6
+     }
+    },
+    "life_solutions_30yr_term": {
+     "label": "30 year term",
+     "per100k_by_age": {
+      "20": 21.7,
+      "25": 36.95,
+      "30": 52.2,
+      "35": 67.45,
+      "40": 82.7,
+      "45": 97.95,
+      "50": 113.2
+     }
+    },
+    "life_solutions_whole_life": {
+     "label": "Whole life",
+     "per100k_by_age": {
+      "20": 65.61,
+      "25": 87.64,
+      "30": 109.67,
+      "35": 131.71,
+      "40": 153.74,
+      "45": 175.77,
+      "50": 197.8
+     }
+    }
+   }
+  }
+ ]
+};
+const BENEFITS = {
+  "meta": {
+    "purpose": "Filed benefit highlights keyed to the planner's product options, extracted from Aflac TN SERFF policy forms via in-browser pdf.js. Shown in the year a product is purchased.",
+    "state": "TN", "extracted": "2026-08-03",
+    "note": "Amounts are from filed policy forms. Where a form files variable ranges (shown in brackets), the issued amount is set at sale; the planner's chosen option/benefit amount sits inside that range. Highlights are a representative subset, not the full schedule. The policy controls."
+  },
+  "cancer": {
+    "source": "SERFF AFLA-131175126, forms B70100TN / B70200TN / B70300TN (approved 12/15/2017)",
+    "options": {
+      "opt1": { "form": "B70100TN", "highlights": [
+        "Stem cell and bone marrow transplant: $3,500 (lifetime max $3,500)",
+        "Hospital confinement: $140 per day",
+        "Surgical prosthesis: $1,000 (lifetime max $2,000)",
+        "Topical chemotherapy $100 per month; antinausea $50 per month",
+        "Cancer screening $25 per year; annual care $100 for five years",
+        "Hospice: $1,000 first day, then $50 per day (lifetime max $12,000)"
+      ]},
+      "opt2": { "form": "B70200TN", "highlights": [
+        "Stem cell and bone marrow transplant: $7,000 (lifetime max $7,000)",
+        "Hospital confinement: $175 per day",
+        "Surgical prosthesis: $2,000 (lifetime max $4,000)",
+        "Topical chemotherapy $150 per month; antinausea $100 per month",
+        "Cancer screening $75 per year; annual care $200 for five years",
+        "Hospice: $1,000 first day, then $50 per day (lifetime max $12,000)"
+      ]},
+      "opt3": { "form": "B70300TN", "highlights": [
+        "Stem cell and bone marrow transplant: $10,000 (lifetime max $10,000)",
+        "Hospital confinement: $250 per day",
+        "Surgical prosthesis: $3,000 (lifetime max $6,000)",
+        "Topical chemotherapy $200 per month; antinausea $150 per month",
+        "Cancer screening $100 per year; annual care $300 for five years",
+        "Hospice: $1,000 first day, then $50 per day (lifetime max $12,000)"
+      ]}
+    },
+    "riders": {
+      "IDR": { "form": "B70050TN", "highlight": "Initial Diagnosis Building Benefit: $100 per unit (up to 5 units, $500), building over five years until first internal cancer diagnosis." },
+      "SDR": { "form": "B70052TN", "highlight": "Specified Disease Benefit: $2,000 initial benefit per specified disease, plus $400 per day of hospital confinement ($800 per day beyond 30 days)." },
+      "DCR": { "form": "B70051TN", "highlight": "Dependent Child Rider: $10,000 added child benefit for covered dependent children." }
+    }
+  },
+  "accident": {
+    "source": "SERFF AFLA-134102357, form A38000TN (approved 2024). Amounts are the filed benefit ranges; the issued option sets the amount inside each range.",
+    "shared_highlights": [
+      "Initial accident treatment: $150 to $500 per accident",
+      "Ambulance: ground $300 to $1,000; air or water $2,000 to $5,000",
+      "Hospital admission: up to $10,000, building by year",
+      "ICU admission: up to $20,000; hospital confinement $300 to $2,000; ICU confinement $600 to $4,000",
+      "Fractures, dislocations, lacerations, burns, eye and dental injuries on a filed schedule",
+      "Accidental death: named insured or spouse $20,000 to $500,000; child up to $100,000",
+      "Dismemberment: single $10,000 to $50,000; double $30,000 to $100,000",
+      "Organized sporting activity benefit and home or auto modification up to $10,000"
+    ]
+  },
+  "hospital": {
+    "source": "SERFF AFLA-130740719, form B40100TN (approved 2016 to 2017). Admission and confinement amounts are set at the benefit level you choose.",
+    "shared_highlights": [
+      "Hospital confinement benefit paid at your chosen benefit amount ($500 to $5,000) for a stay of 23+ hours",
+      "Hospital admission benefit at the selected level",
+      "Rehabilitation facility $100 per day; hospital emergency room $100; hospital short stay $100"
+    ],
+    "riders": {
+      "EBR": { "form": "B40050TN", "highlight": "Extended Benefit Rider: adds continued daily benefits for longer confinements." },
+      "HSSCR": { "form": "B40051TN", "highlight": "Hospital Stay and Surgical Care Rider: adds daily stay plus surgical and anesthesia benefits." }
+    }
+  },
+  "lsci": {
+    "source": "SERFF AFLA-128886021, form A73100TN + rider A73050TN (approved). Base benefit amount is what you select (shown here at the $10,000 base).",
+    "shared_highlights": [
+      "Full base benefit on first diagnosis of heart attack, stroke, major organ transplant, end stage renal failure, paralysis, or coma",
+      "Coronary artery bypass graft surgery: $3,000",
+      "Sudden cardiac arrest: full base benefit; subsequent critical illness event: half the base benefit",
+      "Dependent children covered to age 26"
+    ],
+    "riders": {
+      "LSCBR": { "form": "A73050TN", "highlight": "Lump Sum Cancer Benefit Rider: adds an internal cancer lump sum plus carcinoma in situ ($3,000) and cancer related death benefits." }
+    }
+  },
+  "dental": {
+    "source": "SERFF AFLA-126760660, forms A82100R to A82400R (approved). Pays a filed schedule by ADA procedure code; higher levels expand coverage and shorten waiting periods.",
+    "shared_highlights": [
+      "Benefit schedule by procedure: cleanings and exams, fillings and basic services, crowns and major services, prosthetics",
+      "Maximum Building Benefit that grows over time",
+      "Waiting periods by category: basic services about 3 months, crowns and major services about 12 months",
+      "Level Essentials through Level 3 step up the schedule amounts and covered services"
+    ]
+  },
+  "_pending": "vision (VSN, AFLA-128201603), short term disability (A57600, AFLA-127048798), critical care and recovery (A71 series), and life (A68000 / Q60000 / juvenile, via TN and the Interstate Compact) not yet extracted. Filing IDs recorded in the project spec."
+}
+;
+/* =====================================================================
+   Allocation engine: pure functions, no DOM.
+   Sequences HSA funding, Aflac supplemental moves at option/rider
+   granularity, and a laddered life plan over a 5 to 10 year horizon.
+   All Aflac figures are illustrative monthly averages from a TN payroll
+   Class A rate sheet pulled 2026-07-31. Not quotes.
+   ===================================================================== */
+
+/* ---------- EDITABLE ASSUMPTIONS ----------
+   Every tunable rule the sequencer uses lives here. Change a value and
+   every plan recalculates on the next build. Nothing else is hardcoded. */
+const ASSUMPTIONS = {
+  maxMovesPerYear: 2,                      // moves the plan may make in one year
+  hsaShareByAfford: { no: 0.60, strain: 0.50, easily: 0.40 },  // HSA floor share of budget
+  relaxAtDeductible: 0.55,                 // floor multiplier once HSA covers the deductible
+  relaxAtOopMax: 0.35,                     // floor multiplier once HSA covers the out of pocket max
+  diminishing: 0.60,                       // weight discount per prior move in a category
+  diminishingLife: 0.85,                   // gentler discount for ladder rungs, laddering is intentional
+  incomeBandMidpoints: { under50: 40000, b50to100: 75000, b100to150: 125000, over150: 175000 },
+  lifeFaceCap: 1000000,                    // ladder target ceiling
+  wholeLifeStartYear: 6                    // earliest year a permanent rung is considered
+};
+
+const IRS_2026 = {
+  hsaSelf: 4400, hsaFamily: 8750, catchUp: 1000,
+  hdhpMinDedSelf: 1700, hdhpMinDedFamily: 3400,
+  oopMaxSelf: 8500, oopMaxFamily: 17000,
+  source: "IRS Rev. Proc. 2025-19"
+};
+
+/* ---------- coverage tier from household ---------- */
+function coverageTier(adults, kids) {
+  if (adults >= 2) return kids > 0 ? "two_parent_family" : "insured_spouse";
+  return kids > 0 ? "one_parent_family" : "individual";
+}
+
+/* ---------- risk weights from questionnaire answers ---------- */
+function riskWeights(a) {
+  const w = { accident: 30, cancer: 25, critical: 20, hospital: 25, income: 15, dental: 10, vision: 10, life: 0 };
+  const age = a.primaryAge || 35;
+  if (a.activeKids) w.accident += 25;
+  if (a.physicalJob) { w.accident += 20; w.income += 15; }
+  if (a.frequentTravel) w.accident += 15;
+  if (a.kids > 0) { w.accident += 10; w.hospital += 10; }
+  if (a.histCancer) w.cancer += 35;
+  if (age > 45) w.cancer += 10;
+  if (a.histHeart) w.critical += 35;
+  if (a.histDiabetes) w.critical += 15;
+  if (age > 50) w.critical += 10;
+  if (a.deductibleAfford === "no") w.hospital += 20;
+  if (a.deductibleAfford === "strain") w.hospital += 10;
+  if (a.incomeStops) w.income += 40;
+  if (a.bracesLikely) w.dental += 40; else if (a.dentalCare) w.dental += 15;
+  if (a.visionCare) w.vision += 30;
+  // life: need score from current coverage and stated need
+  if (a.lifeToday === "none") w.life = 55;
+  else if (a.lifeToday === "work_only") w.life = 40;
+  else if (a.lifeNeedMore) w.life = 30;
+  else w.life = 10;
+  if (a.kids > 0) w.life += 20;
+  return w;
+}
+
+/* ---------- HSA floor share of budget by deductible answer ---------- */
+function hsaShare(a) {
+  return ASSUMPTIONS.hsaShareByAfford[a.deductibleAfford] ?? 0.5;
+}
+
+/* ---------- life ladder sizing ---------- */
+function lifeTarget(a) {
+  if (!a.lifeYears || a.lifeYears === 0) return 0;
+  const income = ASSUMPTIONS.incomeBandMidpoints[a.incomeBand] || 75000;
+  const raw = income * a.lifeYears;
+  return Math.min(Math.round(raw / 100000) * 100000, ASSUMPTIONS.lifeFaceCap);
+}
+function lifeRungCost(catalog, age, product) {
+  const rungs = catalog.products.find(p => p.id === "life").rungs[product];
+  const ages = Object.keys(rungs.per100k_by_age).map(Number);
+  const nearest = ages.reduce((b, x) => Math.abs(x - age) < Math.abs(b - age) ? x : b, ages[0]);
+  return rungs.per100k_by_age[String(nearest)];
+}
+
+/* ---------- helpers over the catalog ---------- */
+function prod(catalog, id) { return catalog.products.find(p => p.id === id); }
+function optBase(p, optId, tier) {
+  const o = p.options.find(o => o.id === optId);
+  return o ? (o.base[tier] ?? o.base.individual ?? null) : null;
+}
+function riderAdd(p, riderId, tier) {
+  const r = (p.riders || []).find(r => r.id === riderId);
+  return r ? (r.adds[tier] ?? r.adds.individual ?? 0) : 0;
+}
+
+/* =====================================================================
+   Move generation. A move: {kind, productId, detail, monthlyCost,
+   gain (plain language), category}
+   kind: add | upgrade | rider | swap | life | hsa
+   ===================================================================== */
+function candidateMoves(state, catalog, tier, a) {
+  const H = state.holdings; // map productId -> {optId, riders:[]}
+  const mv = [];
+  const age = a.primaryAge + state.year - 1;
+
+  const cancer = prod(catalog, "cancer"), acc = prod(catalog, "accident"),
+        hosp = prod(catalog, "hospital"), cc = prod(catalog, "critcare"),
+        lsci = prod(catalog, "lsci"), dental = prod(catalog, "dental"),
+        vision = prod(catalog, "vision"), std = prod(catalog, "std");
+
+  const has = id => !!H[id];
+
+  /* --- accident path: opt1 -> opt2 -> opt3 --- */
+  if (!has("accident")) {
+    mv.push({ kind: "add", productId: "accident", detail: "Option 1", optId: "opt1",
+      monthlyCost: optBase(acc, "opt1", tier), category: "accident",
+      gain: "Cash benefits for emergency treatment, fractures, dislocations, and follow up care, 24 hour coverage." });
+  } else {
+    const cur = H.accident.optId, next = cur === "opt1" ? "opt2" : cur === "opt2" ? "opt3" : null;
+    if (next) mv.push({ kind: "upgrade", productId: "accident", detail: `Option ${cur.slice(3)} to Option ${next.slice(3)}`, optId: next,
+      monthlyCost: optBase(acc, next, tier) - optBase(acc, cur, tier), category: "accident",
+      gain: "Higher benefit amounts on every covered accident event." });
+  }
+
+  /* --- cancer path: opt1 -> +IDR -> opt2 -> opt3; +SDR cheap; DCR if kids --- */
+  if (!has("cancer") && !has("lsci")) {
+    mv.push({ kind: "add", productId: "cancer", detail: "Option 1", optId: "opt1",
+      monthlyCost: optBase(cancer, "opt1", tier), category: "cancer",
+      gain: "Monthly cash benefits during cancer treatment: hospitalization, radiation, chemotherapy, travel." });
+  } else if (has("cancer")) {
+    const h = H.cancer;
+    if (!h.riders.includes("IDR")) {
+      mv.push({ kind: "rider", productId: "cancer", detail: "add Initial Diagnosis Rider", riderId: "IDR",
+        monthlyCost: riderAdd(cancer, "IDR", tier), category: "cancer",
+        gain: "An extra lump sum paid at first diagnosis, when out of pocket costs spike." });
+    }
+    const cur = h.optId, next = cur === "opt1" ? "opt2" : cur === "opt2" ? "opt3" : null;
+    if (next) mv.push({ kind: "upgrade", productId: "cancer", detail: `Option ${cur.slice(3)} to Option ${next.slice(3)}`, optId: next,
+      monthlyCost: optBase(cancer, next, tier) - optBase(cancer, cur, tier), category: "cancer",
+      gain: "Larger treatment benefits across the same covered events." });
+    if (!h.riders.includes("SDR")) {
+      mv.push({ kind: "rider", productId: "cancer", detail: "add Specified Disease Rider", riderId: "SDR",
+        monthlyCost: Math.max(riderAdd(cancer, "SDR", tier), 1), category: "cancer",
+        gain: "Extends coverage to a list of specified diseases beyond cancer." });
+    }
+    if (a.kids > 0 && !h.riders.includes("DCR")) {
+      mv.push({ kind: "rider", productId: "cancer", detail: "add Dependent Child Rider", riderId: "DCR",
+        monthlyCost: Math.max(riderAdd(cancer, "DCR", tier), 1), category: "cancer",
+        gain: "Adds a $10,000 child benefit." });
+    }
+  }
+
+  /* --- hospital path: $500 -> $1000 -> +EBR -> $1500 -> +HSSCR --- */
+  const hampt = ["ha500", "ha1000", "ha1500", "ha2000"];
+  if (!has("hospital")) {
+    mv.push({ kind: "add", productId: "hospital", detail: "$500 admission benefit", optId: "ha500",
+      monthlyCost: optBase(hosp, "ha500", tier), category: "hospital",
+      gain: "A cash benefit on hospital admission that lands before your deductible does." });
+  } else {
+    const h = H.hospital, i = hampt.indexOf(h.optId);
+    if (i >= 0 && i < hampt.length - 1) {
+      const next = hampt[i + 1];
+      mv.push({ kind: "upgrade", productId: "hospital", detail: `$${h.optId.slice(2)} to $${next.slice(2)} admission benefit`, optId: next,
+        monthlyCost: optBase(hosp, next, tier) - optBase(hosp, h.optId, tier), category: "hospital",
+        gain: "A larger admission benefit, sized closer to your deductible." });
+    }
+    if (!h.riders.includes("EBR")) {
+      mv.push({ kind: "rider", productId: "hospital", detail: "add Extended Benefit Rider", riderId: "EBR",
+        monthlyCost: riderAdd(hosp, "EBR", tier), category: "hospital",
+        gain: "Extends daily benefits for longer hospital stays." });
+    }
+    if (!h.riders.includes("HSSCR")) {
+      mv.push({ kind: "rider", productId: "hospital", detail: "add Hospital Stay and Surgical Care Rider", riderId: "HSSCR",
+        monthlyCost: riderAdd(hosp, "HSSCR", tier), category: "hospital",
+        gain: "Adds daily hospital stay plus surgery and anesthesia benefits." });
+    }
+  }
+
+  /* --- critical illness: critcare path OR lsci path; swap logic --- */
+  const wantCrit = state.weights.critical, wantCancer = state.weights.cancer;
+  if (!has("critcare") && !has("lsci")) {
+    if (wantCrit >= wantCancer) {
+      mv.push({ kind: "add", productId: "critcare", detail: "Level 1", optId: "level_one",
+        monthlyCost: optBase(cc, "level_one", tier), category: "critical",
+        gain: "Lump sum plus recovery benefits for heart attack, stroke, and other major health events." });
+    } else {
+      mv.push({ kind: "add", productId: "lsci", detail: "$10,000 benefit", optId: "base10k",
+        monthlyCost: optBase(lsci, "base10k", tier), category: "critical",
+        gain: "A $10,000 lump sum at first diagnosis of a covered critical illness." });
+    }
+  } else if (has("critcare")) {
+    const h = H.critcare;
+    if (h.optId === "level_one") {
+      mv.push({ kind: "upgrade", productId: "critcare", detail: "Level 1 to Level 2", optId: "level_two",
+        monthlyCost: optBase(cc, "level_two", tier) - optBase(cc, "level_one", tier), category: "critical",
+        gain: "Roughly double the benefit amounts on the same covered events." });
+    }
+    if (!h.riders.includes("FOBBR")) {
+      mv.push({ kind: "rider", productId: "critcare", detail: "add First Occurrence Building Benefit Rider", riderId: "FOBBR",
+        monthlyCost: riderAdd(cc, "FOBBR", tier), category: "critical",
+        gain: "Your benefit grows by $500 each year you stay healthy before a first occurrence." });
+    }
+    if (!h.riders.includes("PSHERR")) {
+      mv.push({ kind: "rider", productId: "critcare", detail: "add Recovery Rider", riderId: "PSHERR",
+        monthlyCost: riderAdd(cc, "PSHERR", tier), category: "critical",
+        gain: "Monthly recovery benefits while you get back on your feet." });
+    }
+  } else if (has("lsci")) {
+    const h = H.lsci;
+    if (!h.riders.includes("LSCBR")) {
+      mv.push({ kind: "rider", productId: "lsci", detail: "add Lump Sum Cancer Benefit Rider", riderId: "LSCBR",
+        monthlyCost: riderAdd(lsci, "LSCBR", tier), category: "critical",
+        gain: "Adds a matching lump sum cancer benefit to the same policy." });
+    }
+  }
+
+  /* swap example: holding cancer opt1, high critical need, lsci+rider comparable cost */
+  if (has("cancer") && H.cancer.optId === "opt1" && !has("critcare") && !has("lsci") &&
+      wantCrit > 45 && wantCancer > 40) {
+    const swapCost = optBase(lsci, "base10k", tier) + riderAdd(lsci, "LSCBR", tier);
+    const curCost = optBase(cancer, "opt1", tier) + H.cancer.riders.reduce((s, r) => s + riderAdd(cancer, r, tier), 0);
+    mv.push({ kind: "swap", productId: "lsci", dropId: "cancer", optId: "base10k", riders: ["LSCBR"],
+      detail: "drop Cancer Option 1, add Lump Sum Critical Illness with cancer rider",
+      monthlyCost: swapCost - curCost, category: "critical",
+      gain: "One policy now covers both critical illness and cancer with lump sums, freeing budget." });
+  }
+
+  /* --- income protection (individual tier only, priced for primary adult) --- */
+  if (!has("std") && a.incomeStops) {
+    mv.push({ kind: "add", productId: "std", detail: "0/30 elimination, 6 month benefit", optId: "econ",
+      monthlyCost: optBase(std, "econ", "individual"), category: "income",
+      gain: "Replaces part of your paycheck if illness or injury keeps you out of work." });
+  }
+
+  /* --- dental / vision --- */
+  if (!has("dental") && (a.bracesLikely || a.dentalCare)) {
+    mv.push({ kind: "add", productId: "dental", detail: a.bracesLikely ? "Level 1" : "Essentials",
+      optId: a.bracesLikely ? "level_1" : "essentials",
+      monthlyCost: optBase(dental, a.bracesLikely ? "level_1" : "essentials", tier), category: "dental",
+      gain: a.bracesLikely ? "Dental benefits at the level where orthodontic riders attach." : "Everyday dental benefits for cleanings and basic care." });
+  }
+  if (!has("vision") && a.visionCare) {
+    mv.push({ kind: "add", productId: "vision", detail: "Vision Now", optId: "vsn",
+      monthlyCost: optBase(vision, "vsn", tier), category: "vision",
+      gain: "Benefits for exams, frames, and corrective materials." });
+  }
+
+  /* --- life ladder rung --- */
+  const target = lifeTarget(a);
+  if (target > state.lifeFace) {
+    const rung = lifeRungCost(catalog, age, "life_solutions_20yr_term");
+    if (age <= 50) {
+      mv.push({ kind: "life", productId: "life", detail: `add a $100,000 rung of 20 year term (age ${age})`,
+        monthlyCost: rung, category: "life",
+        gain: `Ladder grows to $${((state.lifeFace + 100000) / 1000).toFixed(0)}K of a $${(target / 1000).toFixed(0)}K income protection target.` });
+    }
+  }
+  if (state.year >= ASSUMPTIONS.wholeLifeStartYear && state.lifeFace >= target && target > 0 && !state.wholeLife && (a.primaryAge + state.year - 1) <= 50) {
+    const wl = lifeRungCost(catalog, age, "life_solutions_whole_life") / 2; // $50K rung
+    mv.push({ kind: "life", productId: "life", detail: `add a $50,000 whole life rung (age ${age})`, wholeLife: true,
+      monthlyCost: Math.round(wl), category: "life",
+      gain: "A permanent layer that stays after the term rungs expire and builds cash value." });
+  }
+
+  return mv.filter(m => m.monthlyCost !== null && m.monthlyCost > 0);
+}
+
+/* ---------- score a move: category weight per dollar, priority boosts ---------- */
+function scoreMove(m, weights, state, a) {
+  let w = weights[m.category] || 10;
+  // diminishing returns: each prior move in the same category discounts the next
+  const prior = state.log.filter(e => e.category === m.category).length;
+  w *= Math.pow(m.category === "life" ? ASSUMPTIONS.diminishingLife : ASSUMPTIONS.diminishing, prior);
+  if (m.kind === "add" && state.year === 1) w += 15;         // establish core coverage early
+  if (m.kind === "rider") w += 5;                             // riders are cheap value
+  if (m.kind === "swap") w += 10;                             // swaps only surface when justified
+  // explicit stated needs must surface even when pricier per dollar
+  if (m.kind === "add") {
+    if (m.productId === "dental" && a.bracesLikely) w *= 3;
+    if (m.productId === "std" && a.incomeStops) w *= 2.5;
+    if (m.productId === "vision" && a.visionCare) w *= 2;
+  }
+  if (m.category === "life" && state.lifeFace === 0 && weights.life >= 50) w *= 2.5;
+  return w / Math.max(m.monthlyCost, 1);
+}
+
+/* =====================================================================
+   Main projection.
+   inputs: {
+     goldMonthly, bronzeMonthly, bronzeDeductible, bronzeOopMax,
+     goldDeductible, answers, years (5-10), trendPct, commitPct,
+     hsaReturnPct, catalog
+   }
+   ===================================================================== */
+function project(inputs) {
+  const a = inputs.answers;
+  const tier = coverageTier(a.adults, a.kids);
+  const weights = riskWeights(a);
+  const isFamily = tier !== "individual";
+  const hsaLimit = isFamily ? IRS_2026.hsaFamily : IRS_2026.hsaSelf;
+  const catchUpEligible = age => age >= 55;
+
+  const state = { year: 1, holdings: {}, lifeFace: 0, wholeLife: false, weights,
+                  hsaBalance: 0, log: [] };
+  const years = [];
+  const trend = inputs.trendPct / 100, ret = inputs.hsaReturnPct / 100;
+
+  for (let y = 1; y <= inputs.years; y++) {
+    state.year = y;
+    const age = a.primaryAge + y - 1;
+    const growth = Math.pow(1 + trend, y - 1);
+    const monthlyGap = (inputs.goldMonthly - inputs.bronzeMonthly) * growth;
+    const budget = monthlyGap * (inputs.commitPct / 100);   // monthly dollars committed
+
+    // current Aflac + life spend carried from prior years (held level after purchase)
+    const carried = state.log.reduce((s, e) => s + e.monthlyCost, 0);
+    let room = budget - carried;
+
+    // HSA floor for this year. The floor relaxes as the balance covers
+    // real exposure: full share until the deductible is funded, reduced
+    // once it is, minimal once the out of pocket maximum is funded.
+    let share = hsaShare(a);
+    if (state.hsaBalance >= (inputs.bronzeOopMax || Infinity)) share *= ASSUMPTIONS.relaxAtOopMax;
+    else if (state.hsaBalance >= (inputs.bronzeDeductible || Infinity)) share *= ASSUMPTIONS.relaxAtDeductible;
+    const floor = Math.min(budget * share, room);
+
+    const moves = [];
+    let spendable = Math.max(room - floor, 0);
+
+    // up to 2 moves per year, best score per dollar first,
+    // never two moves on the same product (or two life rungs) in one year
+    const touched = new Set();
+    for (let k = 0; k < ASSUMPTIONS.maxMovesPerYear; k++) {
+      const cands = candidateMoves(state, inputs.catalog, tier, a)
+        .filter(m => m.monthlyCost <= spendable && !touched.has(m.productId))
+        .sort((m1, m2) => scoreMove(m2, weights, state, a) - scoreMove(m1, weights, state, a));
+      if (!cands.length) break;
+      const pick = cands[0];
+      pick.monthlyCost = Math.round(pick.monthlyCost);
+      touched.add(pick.productId);
+      if (pick.kind === "swap") touched.add(pick.dropId);
+      // apply
+      if (pick.kind === "add") state.holdings[pick.productId] = { optId: pick.optId, riders: [] };
+      if (pick.kind === "upgrade") state.holdings[pick.productId].optId = pick.optId;
+      if (pick.kind === "rider") state.holdings[pick.productId].riders.push(pick.riderId);
+      if (pick.kind === "swap") {
+        delete state.holdings[pick.dropId];
+        state.holdings[pick.productId] = { optId: pick.optId, riders: pick.riders.slice() };
+      }
+      if (pick.kind === "life") {
+        if (pick.wholeLife) state.wholeLife = true; else state.lifeFace += 100000;
+      }
+      state.log.push(pick);
+      moves.push(pick);
+      spendable -= pick.monthlyCost;
+    }
+
+    // whatever is not spent on protection goes to the HSA, capped at the IRS limit
+    const aflacMonthly = state.log.filter(e => e.category !== "life").reduce((s, e) => s + e.monthlyCost, 0);
+    const lifeMonthly = state.log.filter(e => e.category === "life").reduce((s, e) => s + e.monthlyCost, 0);
+    const hsaMonthly = Math.min(Math.max(budget - aflacMonthly - lifeMonthly, 0),
+                                (hsaLimit + (catchUpEligible(age) ? IRS_2026.catchUp : 0)) / 12);
+
+    // grow balance monthly
+    for (let m = 0; m < 12; m++) state.hsaBalance = state.hsaBalance * (1 + ret / 12) + hsaMonthly;
+
+    years.push({
+      year: y, age, monthlyGap: Math.round(monthlyGap), budget: Math.round(budget),
+      moves, aflacMonthly: Math.round(aflacMonthly), lifeMonthly: Math.round(lifeMonthly),
+      hsaMonthly: Math.round(hsaMonthly), hsaAnnual: Math.round(hsaMonthly * 12),
+      hsaBalance: Math.round(state.hsaBalance), lifeFace: state.lifeFace,
+      wholeLife: state.wholeLife,
+      holdings: JSON.parse(JSON.stringify(state.holdings)),
+      deductibleCovered: state.hsaBalance >= (inputs.bronzeDeductible || 0)
+    });
+  }
+  return { tier, weights, isFamily, hsaLimit, years, irs: IRS_2026 };
+}
+
+
+/* ============================ CONFIG ============================ */
+const CONFIG = {
+  // Cloudflare Worker proxy for HealthSherpa. Leave "" until credentials are
+  // installed server side. The tool never calls HealthSherpa directly and
+  // never ships a key to the browser.
+  HS_PROXY_URL: "https://ichra-chat-proxy.chris-c33.workers.dev/hs/plans",   // set "" to disable the live pull
+  PALETTE: { hsa: "#00A7E1", aflac: "#F89728", life: "#0B5D8A" }
+};
+
+/* ============================ WIZARD STATE ============================ */
+const S = {
+  step: 0, adults: 1, kids: 0,
+  answers: {}, plans: { pulled: false, pullDate: null }
+};
+const STEPS = 5;
+
+function el(id) { return document.getElementById(id); }
+function fmt(n) { return "$" + Math.round(n).toLocaleString("en-US"); }
+
+/* single and multi select button groups */
+function group(id, items, multi, onpick) {
+  const box = el(id); box.innerHTML = "";
+  items.forEach(it => {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = it.label; b.dataset.v = it.v;
+    b.onclick = () => {
+      if (multi) b.classList.toggle("sel");
+      else { box.querySelectorAll("button").forEach(x => x.classList.remove("sel")); b.classList.add("sel"); }
+      onpick && onpick();
+    };
+    box.appendChild(b);
+  });
+}
+function picked(id) { const b = el(id).querySelector("button.sel"); return b ? b.dataset.v : null; }
+function pickedAll(id) { return [...el(id).querySelectorAll("button.sel")].map(b => b.dataset.v); }
+function preset(id, v) { const b = [...el(id).querySelectorAll("button")].find(x => x.dataset.v === String(v)); if (b) b.classList.add("sel"); }
+
+function initWizard() {
+  const dots = el("dots");
+  for (let i = 0; i < STEPS; i++) { const s = document.createElement("span"); if (i === 0) s.classList.add("on"); dots.appendChild(s); }
+
+  group("hh", [
+    { v: "me", label: "Just me" }, { v: "spouse", label: "Me and my spouse" },
+    { v: "kids", label: "Me and my children" }, { v: "family", label: "My spouse and children" }
+  ], false, () => {
+    const v = picked("hh");
+    S.adults = (v === "spouse" || v === "family") ? 2 : 1;
+    el("spouseRow").classList.toggle("hidden", S.adults < 2);
+    const hasKids = v === "kids" || v === "family";
+    el("kidsRow").classList.toggle("hidden", !hasKids);
+    if (!hasKids) { S.kids = 0; } else { renderKidAges(); }
+  });
+  el("kids").addEventListener("input", renderKidAges);
+
+  group("afford", [
+    { v: "easily", label: "Yes, easily" }, { v: "strain", label: "Yes, but it would hurt" }, { v: "no", label: "No" }
+  ]);
+  group("hist", [
+    { v: "cancer", label: "Cancer" }, { v: "heart", label: "Heart disease or stroke" },
+    { v: "diabetes", label: "Diabetes" }, { v: "none", label: "None of these" }
+  ], true);
+  group("lifestyle", [
+    { v: "activeKids", label: "Kids in sports or activities" }, { v: "physicalJob", label: "Physically demanding work" },
+    { v: "travel", label: "On the road a lot" }, { v: "none", label: "None of these" }
+  ], true);
+  group("incomeStop", [
+    { v: "yes", label: "Yes, right away" }, { v: "partly", label: "Partly, some sick leave" }, { v: "no", label: "No, I am salaried with good leave" }
+  ]);
+  group("dv", [
+    { v: "braces", label: "Braces likely for the kids" }, { v: "dental", label: "Regular dental care matters" },
+    { v: "vision", label: "Glasses or contacts in the family" }, { v: "none", label: "None of these" }
+  ], true);
+  group("lifeToday", [
+    { v: "none", label: "No" }, { v: "work_only", label: "Only through work" }, { v: "own", label: "Yes, my own policy" }
+  ]);
+  group("lifeYears", [
+    { v: "0", label: "None" }, { v: "3", label: "About 3 years" }, { v: "5", label: "About 5 years" }, { v: "10", label: "10 or more" }
+  ]);
+  group("incomeBand", [
+    { v: "under50", label: "Under $50K" }, { v: "b50to100", label: "$50K to $100K" },
+    { v: "b100to150", label: "$100K to $150K" }, { v: "over150", label: "Over $150K" }
+  ]);
+  group("commit", [{ v: "50", label: "Half of it" }, { v: "75", label: "Three quarters" }, { v: "100", label: "All of it" }]);
+  group("horizon", [{ v: "5", label: "5 years" }, { v: "7", label: "7 years" }, { v: "10", label: "10 years" }]);
+  group("trend", [{ v: "4", label: "4 percent" }, { v: "6", label: "6 percent" }, { v: "8", label: "8 percent" }]);
+  group("hsaRet", [{ v: "0", label: "Cash, 0 percent" }, { v: "4", label: "Conservative, 4 percent" }, { v: "6", label: "Balanced, 6 percent" }]);
+  preset("commit", "75"); preset("horizon", "10"); preset("trend", "6"); preset("hsaRet", "4");
+
+  if (!CONFIG.HS_PROXY_URL) {
+    el("hsPull").disabled = true;
+    el("hsStatus").textContent = "Live plan pull is not connected yet. Enter your quote numbers below.";
+  }
+}
+function renderKidAges() {
+  S.kids = Math.max(1, Math.min(8, parseInt(el("kids").value || "1", 10)));
+  const box = el("kidsAges"); box.innerHTML = "";
+  for (let i = 0; i < S.kids; i++) {
+    const inp = document.createElement("input");
+    inp.type = "number"; inp.min = 0; inp.max = 25; inp.placeholder = "age"; inp.className = "kidage";
+    box.appendChild(inp);
+  }
+}
+
+function showStep(n) {
+  document.querySelectorAll(".step").forEach(s => s.classList.toggle("hidden", +s.dataset.step !== n));
+  [...el("dots").children].forEach((d, i) => d.classList.toggle("on", i <= n));
+  S.step = n; window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function next() {
+  if (S.step === 0 && !validateHousehold()) return;
+  if (S.step === 1 && !validatePlans()) return;
+  showStep(Math.min(S.step + 1, STEPS - 1));
+}
+function back() { showStep(Math.max(S.step - 1, 0)); }
+
+function validateHousehold() {
+  const age = parseInt(el("age1").value, 10);
+  if (!picked("hh")) { alertMsg("Choose who needs coverage."); return false; }
+  if (!age || age < 18 || age > 74) { alertMsg("Enter your age, 18 to 74."); return false; }
+  return true;
+}
+function validatePlans() {
+  const g = +el("goldMo").value, b = +el("bronzeMo").value, bd = +el("bronzeDed").value;
+  if (!g || !b || !bd) { alertMsg("Enter the Gold premium, Bronze premium, and Bronze deductible."); return false; }
+  if (b >= g) { alertMsg("The Bronze premium should be lower than the Gold premium. Check the numbers."); return false; }
+  return true;
+}
+function alertMsg(t) {
+  let a = document.querySelector(".step:not(.hidden) .alert");
+  if (!a) { a = document.createElement("div"); a.className = "alert"; document.querySelector(".step:not(.hidden) h2").after(a); }
+  a.textContent = t;
+}
+
+/* ============================ HEALTHSHERPA PULL ============================ */
+async function pullPlans() {
+  const zip = el("zip").value.trim();
+  if (!/^\d{5}$/.test(zip)) { alertMsg("Enter a 5 digit ZIP first."); return; }
+  el("hsStatus").textContent = "Pulling plans…";
+  el("hsEmpty").classList.add("hidden");
+  try {
+    const ages = [parseInt(el("age1").value, 10)];
+    if (S.adults > 1) ages.push(parseInt(el("age2").value, 10) || ages[0]);
+    const kidAges = [...document.querySelectorAll(".kidage")].map(k => +k.value || 8);
+    const payload = { zip, ages, kidAges };
+    if (S.plans.fips) payload.fips = S.plans.fips;
+    const res = await fetch(CONFIG.HS_PROXY_URL, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    if (data.needCounty) {
+      // multi county ZIP: ask which county, then re-pull
+      el("hsStatus").innerHTML = "This ZIP spans more than one county. Pick yours: " +
+        data.needCounty.map(c => `<button type="button" class="tbltoggle" onclick="S.plans.fips='${c.fips}';pullPlans()">${c.name}</button>`).join(" · ");
+      return;
+    }
+    // expected shape from the Worker: {gold:{premium,deductible,oopMax,name}, bronzeHdhp:{premium,deductible,oopMax,name}, pulledAt}
+    if (!data.gold || !data.bronzeHdhp) throw new Error("incomplete");
+    el("goldMo").value = Math.round(data.gold.premium);
+    el("goldDed").value = Math.round(data.gold.deductible);
+    el("bronzeMo").value = Math.round(data.bronzeHdhp.premium);
+    el("bronzeDed").value = Math.round(data.bronzeHdhp.deductible);
+    el("bronzeOop").value = Math.round(data.bronzeHdhp.oopMax);
+    S.plans.pulled = true; S.plans.pullDate = data.pulledAt || new Date().toISOString().slice(0, 10);
+    S.plans.goldName = data.gold.name; S.plans.bronzeName = data.bronzeHdhp.name;
+    el("hsStatus").textContent = "Source: HealthSherpa, pulled " + S.plans.pullDate + ". " +
+      (data.gold.name || "Gold plan") + " and " + (data.bronzeHdhp.name || "Bronze HDHP") + ".";
+  } catch (e) {
+    S.plans.pulled = false;
+    el("hsStatus").textContent = "";
+    el("hsEmpty").classList.remove("hidden");
+  }
+}
+
+/* ============================ BUILD & RENDER ============================ */
+function collectAnswers() {
+  const hist = pickedAll("hist"), life = pickedAll("lifestyle"), dv = pickedAll("dv");
+  const kidAges = [...document.querySelectorAll(".kidage")].map(k => +k.value || 8);
+  return {
+    adults: S.adults, kids: (picked("hh") === "kids" || picked("hh") === "family") ? S.kids : 0,
+    kidAges, primaryAge: parseInt(el("age1").value, 10),
+    spouseAge: S.adults > 1 ? parseInt(el("age2").value, 10) || null : null,
+    histCancer: hist.includes("cancer"), histHeart: hist.includes("heart"), histDiabetes: hist.includes("diabetes"),
+    activeKids: life.includes("activeKids"), physicalJob: life.includes("physicalJob"), frequentTravel: life.includes("travel"),
+    deductibleAfford: picked("afford") || "strain",
+    incomeStops: (picked("incomeStop") || "no") !== "no",
+    bracesLikely: dv.includes("braces"), dentalCare: dv.includes("dental"), visionCare: dv.includes("vision"),
+    lifeToday: picked("lifeToday") || "none",
+    lifeNeedMore: (picked("lifeToday") || "none") !== "own",
+    lifeYears: parseInt(picked("lifeYears") || "0", 10),
+    incomeBand: picked("incomeBand") || "b50to100"
+  };
+}
+
+let LAST = null;
+function buildPlan() {
+  const answers = collectAnswers();
+  const inputs = {
+    goldMonthly: +el("goldMo").value, bronzeMonthly: +el("bronzeMo").value,
+    goldDeductible: +el("goldDed").value || 0,
+    bronzeDeductible: +el("bronzeDed").value, bronzeOopMax: +el("bronzeOop").value || 0,
+    answers, years: parseInt(picked("horizon") || "10", 10),
+    trendPct: parseFloat(picked("trend") || "6"), commitPct: parseFloat(picked("commit") || "75"),
+    hsaReturnPct: parseFloat(picked("hsaRet") || "4"), catalog: CATALOG
+  };
+  const r = project(inputs);
+  LAST = { r, inputs };
+  el("wizard").classList.add("hidden");
+  renderResults(r, inputs);
+  el("results").classList.remove("hidden");
+  window.scrollTo({ top: 0 });
+}
+
+function renderResults(r, inputs) {
+  const box = el("results");
+  const gap = inputs.goldMonthly - inputs.bronzeMonthly;
+  const yrs = r.years, last = yrs[yrs.length - 1];
+  const totalAflac = last.aflacMonthly, totalLife = last.lifeMonthly;
+  const planSrc = S.plans.pulled
+    ? `Plan pricing: HealthSherpa, pulled ${S.plans.pullDate}.`
+    : "Plan pricing: entered by you from your own quote screen.";
+
+  let h = `
+  <div class="hero">
+    <div class="lbl">Choosing the HSA eligible Bronze plan over Gold frees up</div>
+    <div class="big">${fmt(gap)} every month</div>
+    <div class="row">
+      <div><div class="lbl">Committed to this plan</div><div style="font-weight:700">${fmt(gap * inputs.commitPct / 100)}/mo (${inputs.commitPct}%)</div></div>
+      <div><div class="lbl">Horizon</div><div style="font-weight:700">${inputs.years} years</div></div>
+      <div><div class="lbl">HSA balance by year ${inputs.years}</div><div style="font-weight:700">${fmt(last.hsaBalance)}</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>The tradeoff you are making</h2>
+    <p class="sub">Gold costs more every month. Bronze costs less but exposes you to a bigger deductible. This plan closes that exposure two ways at once: cash in an HSA, and insurance that pays cash when specific things happen.</p>
+    ${exposureBars(inputs)}
+    <div class="src">${planSrc} Deductible and out of pocket figures are annual; premiums are monthly. Sides are compared in the same units.</div>
+  </div>
+
+  <div class="card">
+    <h2>Your year by year plan</h2>
+    <p class="sub">Not one big decision today. Each year adds, upgrades, or swaps one or two pieces as the budget grows. Riders and option levels matter as much as which policy you pick.</p>
+    ${yrs.map(yearCard).join("")}
+  </div>
+
+  <div class="card">
+    <h2>Where each dollar goes</h2>
+    <p class="sub">Monthly allocation by year. The HSA gets the most early while your deductible is uncovered, then protection catches up.</p>
+    ${allocChart(yrs)}
+    <button class="tbltoggle" onclick="el('allocTbl').classList.toggle('hidden')">Show the numbers as a table</button>
+    <div id="allocTbl" class="hidden">${allocTable(yrs)}</div>
+  </div>
+
+  <div class="card">
+    <h2>HSA balance projection</h2>
+    <p class="sub">Assumes ${inputs.hsaReturnPct} percent yearly growth on invested dollars and no withdrawals. Real life includes withdrawals; this shows the engine, not a promise.</p>
+    ${balanceChart(yrs, inputs)}
+    <button class="tbltoggle" onclick="el('balTbl').classList.toggle('hidden')">Show the numbers as a table</button>
+    <div id="balTbl" class="hidden">${balanceTable(yrs)}</div>
+  </div>
+
+  ${lifeSection(r, inputs)}
+
+  <div class="card">
+    <h2>What this costs and what it builds, side by side</h2>
+    <div class="statgrid">
+      <div class="stat"><div class="v">${fmt(totalAflac)}/mo</div><div class="l">Supplemental protection by year ${inputs.years}</div></div>
+      <div class="stat"><div class="v">${fmt(totalLife)}/mo</div><div class="l">Life insurance ladder by year ${inputs.years}</div></div>
+      <div class="stat"><div class="v">${fmt(last.hsaBalance)}</div><div class="l">Projected HSA balance</div></div>
+      <div class="stat"><div class="v">${last.lifeFace > 0 ? fmt(last.lifeFace) + (last.wholeLife ? " +" : "") : "$0"}</div><div class="l">Term life face amount${last.wholeLife ? ", plus a permanent layer" : ""}</div></div>
+    </div>
+    <p class="sub" style="margin-top:8px">There is no individual medical underwriting on the supplemental products shown. Rates depend on age band, coverage tier, state, and industry class, never on your health. That predictability is what makes a multi year plan like this one workable.</p>
+  </div>
+
+  <div class="card">
+    <h3>Assumptions and sources</h3>
+    <div class="src">
+      ${planSrc}<br>
+      Aflac figures are illustrative monthly averages derived from a Tennessee payroll industry Class A rate sheet pulled 2026-07-31, rounded to whole dollars. They are not quotes. Rates vary by age band, coverage tier, state, and industry class and are subject to change.<br>
+      HSA limits: $4,400 self only, $8,750 family, plus $1,000 catch up at age 55, per IRS Rev. Proc. 2025-19 (2026). Limits are held flat in the projection, which is conservative.<br>
+      HDHP definition for 2026: minimum deductible $1,700 self only or $3,400 family, per the same revenue procedure. Confirm your Bronze plan is listed as HSA eligible before enrolling.<br>
+      Premium growth of ${inputs.trendPct} percent per year is an assumption you selected. KFF reported average 2026 marketplace increases near 26 percent; long run averages are lower. The gap between Gold and Bronze grows at the same rate in this model.<br>
+      Life insurance figures are interpolated from non tobacco rates at ages 18 and 50 and are for ladder illustration only. An agent quotes the real number at your attained age.<br>
+      Lump Sum Critical Illness averages use the non smoker table. Tobacco users pay more; ask an agent for the tobacco rate.<br>
+      The underlying rate sheet was pulled 2026-07-31 and should be refreshed before this tool is relied on in a later plan year.<br>
+      Purchased policies are modeled at level premium after purchase. New purchases price at your age in the year you buy.
+    </div>
+    <div class="disc">
+      Rates are for illustration purposes only and do not imply coverage. Refer to the policy brochure for benefits and limitations. This tool is educational and is not insurance, tax, or investment advice. HSA tax treatment depends on your situation; consult a tax professional. Benefit descriptions are summaries; the policy controls.
+    </div>
+    <div style="margin-top:14px"><button class="btn ghost" onclick="restart()">Start over</button></div>
+  </div>`;
+  box.innerHTML = h;
+}
+
+/* ---------- exposure comparison: grouped horizontal bars ---------- */
+function exposureBars(inputs) {
+  const P = CONFIG.PALETTE;
+  const rows = [
+    { lab: "Gold premium /mo", v: inputs.goldMonthly, c: P.life },
+    { lab: "Bronze premium /mo", v: inputs.bronzeMonthly, c: P.hsa },
+    { lab: "Gold deductible /yr", v: inputs.goldDeductible, c: P.life },
+    { lab: "Bronze deductible /yr", v: inputs.bronzeDeductible, c: P.hsa },
+    { lab: "Bronze out of pocket max /yr", v: inputs.bronzeOopMax, c: P.aflac }
+  ].filter(r => r.v > 0);
+  const max = Math.max(...rows.map(r => r.v));
+  return rows.map(r => `
+    <div class="barrow"><div class="lab">${r.lab}</div>
+      <div class="trk"><div class="fill" style="width:${Math.max(r.v / max * 100, 8)}%;background:${r.c}">${fmt(r.v)}</div></div>
+    </div>`).join("");
+}
+
+/* ---------- year cards ---------- */
+const PRODUCT_NAMES = {
+  cancer: "Cancer Protection Assurance", accident: "Accident Insurance",
+  hospital: "Hospital Choice", critcare: "Critical Care and Recovery",
+  lsci: "Lump Sum Critical Illness", dental: "Dental", vision: "Vision Now",
+  std: "Short Term Disability", life: ""
+};
+function moveTitle(m) {
+  const name = PRODUCT_NAMES[m.productId] || "";
+  if (!name || m.kind === "swap" || m.detail.toLowerCase().includes(name.toLowerCase())) return cap(m.detail);
+  return name + ": " + m.detail;
+}
+/* filed benefit highlights, keyed by product/option or rider */
+function filedBenefits(m) {
+  const B = typeof BENEFITS !== "undefined" ? BENEFITS : null;
+  if (!B) return null;
+  const p = B[m.productId];
+  if (!p) return null;
+  // riders (any product) render their own filed highlight
+  if (m.kind === "rider" && p.riders && p.riders[m.riderId]) return { list: [p.riders[m.riderId].highlight], src: p.source };
+  // cancer has per-option schedules; only show on add/upgrade, not on rider handled above
+  if (m.productId === "cancer" && (m.kind === "add" || m.kind === "upgrade")) {
+    const o = p.options && p.options[m.optId];
+    return o ? { list: o.highlights, src: p.source } : null;
+  }
+  // products with a shared schedule show it when first added (not on every upgrade)
+  if (m.kind === "add" && p.shared_highlights) return { list: p.shared_highlights, src: p.source };
+  return null;
+}
+function yearCard(y) {
+  const moves = y.moves.length ? y.moves.map(m => `
+    <div class="move">
+      <div class="k ${m.kind}">${m.kind}</div>
+      <div class="d"><b>${moveTitle(m)}</b><p>${m.gain}</p>${benefitBlock(m)}</div>
+      <div class="c">${m.monthlyCost >= 0 ? "+" : "−"}${fmt(Math.abs(m.monthlyCost))}/mo</div>
+    </div>`).join("")
+    : `<div class="move"><div class="d"><b>Hold steady</b><p>No new purchases. The growing budget flows to the HSA.</p></div></div>`;
+  return `
+  <div class="yr">
+    <div class="yhead">
+      <span class="ynum">Year ${y.year}</span>
+      <span class="ymeta">age ${y.age} · budget ${fmt(y.budget)}/mo</span>
+      ${y.deductibleCovered ? '<span class="pill good">Deductible covered by HSA</span>' : '<span class="pill warn">Building deductible cover</span>'}
+    </div>
+    <div class="ybody">
+      ${moves}
+      <div class="alloc">
+        <span>HSA <b>${fmt(y.hsaMonthly)}/mo</b></span>
+        <span>Supplemental <b>${fmt(y.aflacMonthly)}/mo</b></span>
+        <span>Life <b>${fmt(y.lifeMonthly)}/mo</b></span>
+        <span>HSA balance <b>${fmt(y.hsaBalance)}</b></span>
+      </div>
+    </div>
+  </div>`;
+}
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+function benefitBlock(m) {
+  const b = filedBenefits(m);
+  if (!b) return "";
+  return `<div class="filed"><div class="filed-h">What it pays (filed benefits)</div><ul>${
+    b.list.map(x => `<li>${x}</li>`).join("")}</ul><div class="filed-src">${b.src}</div></div>`;
+}
+
+/* ---------- stacked allocation chart (SVG) ---------- */
+function allocChart(yrs) {
+  const P = CONFIG.PALETTE;
+  const W = 760, H = 260, padL = 46, padB = 28, padT = 12;
+  const max = Math.max(...yrs.map(y => y.hsaMonthly + y.aflacMonthly + y.lifeMonthly));
+  const bw = Math.min(44, (W - padL - 10) / yrs.length - 10);
+  const x = i => padL + 10 + i * ((W - padL - 10) / yrs.length);
+  const yScale = v => (H - padB) - v / max * (H - padB - padT);
+  let bars = "";
+  yrs.forEach((y, i) => {
+    let acc = 0;
+    [["hsaMonthly", P.hsa], ["aflacMonthly", P.aflac], ["lifeMonthly", P.life]].forEach(([k, c]) => {
+      const v = y[k]; if (v <= 0) return;
+      const y0 = yScale(acc), y1 = yScale(acc + v);
+      bars += `<rect x="${x(i)}" y="${y1 + 1}" width="${bw}" height="${Math.max(y0 - y1 - 2, 1)}" fill="${c}" rx="2"></rect>`;
+      acc += v;
+    });
+    bars += `<text x="${x(i) + bw / 2}" y="${yScale(acc) - 5}" text-anchor="middle" font-size="10" fill="#5B6B7B">${fmt(acc)}</text>`;
+    bars += `<text x="${x(i) + bw / 2}" y="${H - 8}" text-anchor="middle" font-size="10" fill="#5B6B7B">Y${y.year}</text>`;
+  });
+  const grid = [0, .5, 1].map(f => {
+    const gy = yScale(max * f);
+    return `<line x1="${padL}" y1="${gy}" x2="${W - 4}" y2="${gy}" stroke="#E5EAEE" stroke-width="1"></line>
+            <text x="${padL - 6}" y="${gy + 3}" text-anchor="end" font-size="9" fill="#5B6B7B">${fmt(max * f)}</text>`;
+  }).join("");
+  return `
+  <div class="legend">
+    <span><i style="background:${P.hsa}"></i>HSA savings</span>
+    <span><i style="background:${P.aflac}"></i>Supplemental protection</span>
+    <span><i style="background:${P.life}"></i>Life ladder</span>
+  </div>
+  <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Monthly allocation by year, stacked by destination" style="width:100%;height:auto">${grid}${bars}</svg>`;
+}
+function allocTable(yrs) {
+  return `<table class="dv"><tr><th>Year</th><th>HSA /mo</th><th>Supplemental /mo</th><th>Life /mo</th><th>Total /mo</th></tr>
+  ${yrs.map(y => `<tr><td>Year ${y.year}</td><td>${fmt(y.hsaMonthly)}</td><td>${fmt(y.aflacMonthly)}</td><td>${fmt(y.lifeMonthly)}</td><td>${fmt(y.hsaMonthly + y.aflacMonthly + y.lifeMonthly)}</td></tr>`).join("")}</table>`;
+}
+
+/* ---------- HSA balance line chart (SVG) ---------- */
+function balanceChart(yrs, inputs) {
+  const P = CONFIG.PALETTE;
+  const W = 760, H = 240, padL = 56, padB = 26, padT = 14;
+  const max = Math.max(...yrs.map(y => y.hsaBalance), inputs.bronzeOopMax || 0) * 1.08;
+  const x = i => padL + i * ((W - padL - 16) / Math.max(yrs.length - 1, 1));
+  const yS = v => (H - padB) - v / max * (H - padB - padT);
+  const pts = yrs.map((y, i) => `${x(i)},${yS(y.hsaBalance)}`).join(" ");
+  const area = `M ${x(0)} ${yS(0)} L ` + pts.replace(/ /g, " L ") + ` L ${x(yrs.length - 1)} ${yS(0)} Z`;
+  let ref = "";
+  if (inputs.bronzeDeductible) {
+    const ry = yS(inputs.bronzeDeductible);
+    ref += `<line x1="${padL}" y1="${ry}" x2="${W - 8}" y2="${ry}" stroke="#F89728" stroke-width="1.5" stroke-dasharray="5 4"></line>
+            <text x="${W - 8}" y="${ry - 5}" text-anchor="end" font-size="10" fill="#9A5B00">Bronze deductible ${fmt(inputs.bronzeDeductible)}</text>`;
+  }
+  if (inputs.bronzeOopMax) {
+    const ry = yS(inputs.bronzeOopMax);
+    ref += `<line x1="${padL}" y1="${ry}" x2="${W - 8}" y2="${ry}" stroke="#C41200" stroke-width="1.5" stroke-dasharray="2 4"></line>
+            <text x="${W - 8}" y="${ry - 5}" text-anchor="end" font-size="10" fill="#C41200">Out of pocket max ${fmt(inputs.bronzeOopMax)}</text>`;
+  }
+  const grid = [0, .5, 1].map(f => {
+    const gy = yS(max * f);
+    return `<line x1="${padL}" y1="${gy}" x2="${W - 8}" y2="${gy}" stroke="#E5EAEE"></line>
+            <text x="${padL - 6}" y="${gy + 3}" text-anchor="end" font-size="9" fill="#5B6B7B">${fmt(max * f)}</text>`;
+  }).join("");
+  const labels = yrs.map((y, i) => `<text x="${x(i)}" y="${H - 8}" text-anchor="middle" font-size="10" fill="#5B6B7B">Y${y.year}</text>`).join("");
+  const lastPt = `<circle cx="${x(yrs.length - 1)}" cy="${yS(yrs[yrs.length - 1].hsaBalance)}" r="4" fill="${P.hsa}"></circle>
+    <text x="${x(yrs.length - 1) - 6}" y="${yS(yrs[yrs.length - 1].hsaBalance) - 10}" text-anchor="end" font-size="11" font-weight="700" fill="#0B5D8A">${fmt(yrs[yrs.length - 1].hsaBalance)}</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Projected HSA balance by year" style="width:100%;height:auto">
+    ${grid}<path d="${area}" fill="${P.hsa}" opacity="0.12"></path>
+    <polyline points="${pts}" fill="none" stroke="${P.hsa}" stroke-width="2.5"></polyline>
+    ${ref}${labels}${lastPt}</svg>`;
+}
+function balanceTable(yrs) {
+  return `<table class="dv"><tr><th>Year</th><th>Contribution /yr</th><th>Balance</th></tr>
+  ${yrs.map(y => `<tr><td>Year ${y.year}</td><td>${fmt(y.hsaAnnual)}</td><td>${fmt(y.hsaBalance)}</td></tr>`).join("")}</table>`;
+}
+
+/* ---------- life ladder section ---------- */
+function lifeSection(r, inputs) {
+  const a = inputs.answers;
+  const target = lifeTarget(a);
+  if (!target) return "";
+  const rungs = [];
+  r.years.forEach(y => y.moves.filter(m => m.category === "life").forEach(m => rungs.push({ year: y.year, m })));
+  const last = r.years[r.years.length - 1];
+  return `
+  <div class="card">
+    <h2>The life insurance ladder</h2>
+    <p class="sub">Your answers point to a target near ${fmt(target)}, about ${a.lifeYears} years of income. Instead of one big policy today, the ladder adds a rung when the budget supports it. Each rung prices at your age when you buy it, which is the honest cost of waiting, and the plan shows it.</p>
+    ${rungs.length ? rungs.map(x => `
+      <div class="move"><div class="k life">Year ${x.year}</div>
+        <div class="d"><b>${cap(x.m.detail)}</b><p>${x.m.gain}</p></div>
+        <div class="c">+${fmt(x.m.monthlyCost)}/mo</div></div>`).join("")
+      : `<div class="empty">The committed budget never reached a ladder rung inside the horizon. Raise the commitment share or extend the horizon to see the ladder form.</div>`}
+    <div class="src">Ladder reached ${fmt(last.lifeFace)} of term coverage${last.wholeLife ? " plus a permanent whole life layer" : ""} by year ${inputs.years}. Illustrative, from non tobacco interpolated averages; an agent quotes the real premium at issue.</div>
+  </div>`;
+}
+
+function restart() {
+  el("results").classList.add("hidden");
+  el("wizard").classList.remove("hidden");
+  showStep(0);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  initWizard();
+  el("foot").innerHTML = "SolutionOTB · Educational decision support · Not insurance advice · Rates are for illustration purposes only and do not imply coverage. Refer to the policy brochure for benefits and limitations.";
+});
+</script>
+</body></html>
