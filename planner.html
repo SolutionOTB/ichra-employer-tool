@@ -82,6 +82,11 @@ input:focus,select:focus{outline:2px solid var(--aflac-blue);border-color:var(--
 .filed li{font-size:.82rem;color:var(--ink);margin:2px 0}
 .filed-src{font-size:.72rem;color:var(--slate);margin-top:5px}
 .stepbadge{display:inline-block;background:var(--aflac-blue);color:#fff;font-weight:800;font-size:.78rem;letter-spacing:.05em;border-radius:999px;padding:4px 14px;margin-bottom:10px;text-transform:uppercase}
+.chapnav{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:16px}
+.chapnav .chip{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);background:#fff;font-weight:700;cursor:pointer;color:var(--slate)}
+.chapnav .chip.on{background:var(--aflac-blue);border-color:var(--aflac-blue);color:#fff}
+.chapnav .chip.alt{width:auto;border-radius:999px;padding:0 14px;font-size:.8rem;margin-left:auto;height:34px}
+.chapnav .chaptitle{font-weight:800;color:var(--deep);font-size:1rem;margin-left:4px}
 .termw{color:var(--deep);border-bottom:1.5px dotted var(--aflac-blue);font-weight:600;cursor:pointer}
 .defbox{display:block;background:var(--tint);border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:8px 0;font-size:.88rem;color:var(--ink);max-width:560px}
 .defbox.hidden{display:none}
@@ -134,12 +139,20 @@ footer{font-size:.75rem;color:var(--slate);max-width:880px;margin:0 auto;padding
 
   <!-- ======================= WIZARD ======================= -->
   <div id="wizard">
-    <div class="step-dots" id="dots"></div>
+    <!-- Intro: the promise -->
+    <div class="card" id="introCard">
+      <h2>Ten minutes. One plan.</h2>
+      <p class="sub" style="font-size:1.05rem">Answer a few questions about your family and what worries you. You get back a simple year by year plan: which health plan to pick, how to build a safety fund with the money you save, and when to add protection, one affordable step at a time.</p>
+      <p class="sub">No email required. Nothing is saved. The numbers stay on your screen.</p>
+      <div class="nav"><span></span><button class="btn primary" onclick="startWizard()">Start</button></div>
+    </div>
+
+    <div class="step-dots hidden" id="dots"></div>
 
     <!-- Step 1: household -->
-    <div class="card step" data-step="0">
+    <div class="card step hidden" data-step="0">
       <h2>Your household</h2>
-      <p class="sub">This sets the coverage tier every number in the plan is priced on.</p>
+      <p class="sub">Coverage is priced by who is on it, so this comes first.</p>
       <div class="row">
         <div><label class="q">ZIP code</label><input type="text" id="zip" inputmode="numeric" maxlength="5" placeholder="37201"></div>
         <div><label class="q">Your age</label><input type="number" id="age1" min="18" max="74" placeholder="38"></div>
@@ -155,10 +168,10 @@ footer{font-size:.75rem;color:var(--slate);max-width:880px;margin:0 auto;padding
       <div class="nav"><span></span><button class="btn primary" onclick="next()">Continue</button></div>
     </div>
 
-    <!-- Step 2: plans -->
-    <div class="card step hidden" data-step="1">
-      <h2>Your two health plan choices</h2>
-      <p class="sub">We compare a Gold plan against a Bronze plan that is HSA eligible (a high deductible health plan). The difference in premium is the budget this plan puts to work.</p>
+    <!-- Step 5 (last): plan numbers -->
+    <div class="card step hidden" data-step="4">
+      <h2>Last step: your two health plan choices</h2>
+      <p class="sub">We compare a Gold plan (higher monthly cost, small deductible) against a Bronze plan that is HSA eligible (lower monthly cost, bigger deductible). The gap between their monthly prices is the money your whole plan is built from.</p>
       <div id="hsLive">
         <button class="btn primary" id="hsPull" onclick="pullPlans()">Pull plans for my ZIP</button>
         <div id="hsStatus" class="src"></div>
@@ -178,11 +191,11 @@ footer{font-size:.75rem;color:var(--slate);max-width:880px;margin:0 auto;padding
           <div><label class="q">Bronze out of pocket maximum</label><input type="number" id="bronzeOop" min="0" placeholder="15000"></div>
         </div>
       </div>
-      <div class="nav"><button class="btn ghost" onclick="back()">Back</button><button class="btn primary" onclick="next()">Continue</button></div>
+      <div class="nav"><button class="btn ghost" onclick="back()">Back</button><button class="btn primary" onclick="buildPlan()">Build my plan</button></div>
     </div>
 
-    <!-- Step 3: risk profile -->
-    <div class="card step hidden" data-step="2">
+    <!-- Step 2: risk profile -->
+    <div class="card step hidden" data-step="1">
       <h2>What should this plan protect against?</h2>
       <p class="sub">Honest answers here drive which products the plan reaches for first.</p>
       <label class="q">If you had to pay your Bronze deductible today, could you?</label>
@@ -198,8 +211,8 @@ footer{font-size:.75rem;color:var(--slate);max-width:880px;margin:0 auto;padding
       <div class="nav"><button class="btn ghost" onclick="back()">Back</button><button class="btn primary" onclick="next()">Continue</button></div>
     </div>
 
-    <!-- Step 4: life -->
-    <div class="card step hidden" data-step="3">
+    <!-- Step 3: life -->
+    <div class="card step hidden" data-step="2">
       <h2>Life insurance</h2>
       <p class="sub">Laddering means buying protection in layers over time instead of one big policy on day one.</p>
       <label class="q">Do you have life insurance today?</label>
@@ -211,10 +224,10 @@ footer{font-size:.75rem;color:var(--slate);max-width:880px;margin:0 auto;padding
       <div class="nav"><button class="btn ghost" onclick="back()">Back</button><button class="btn primary" onclick="next()">Continue</button></div>
     </div>
 
-    <!-- Step 5: plan settings -->
-    <div class="card step hidden" data-step="4">
-      <h2>Plan settings</h2>
-      <p class="sub">You control how much of the premium savings goes to work, and for how long.</p>
+    <!-- Step 4: plan settings -->
+    <div class="card step hidden" data-step="3">
+      <h2>How hard should the plan push?</h2>
+      <p class="sub">You control how much of the monthly savings goes to work, and for how long.</p>
       <label class="q">How much of the monthly savings will you commit to protection and saving?</label>
       <div class="opts" id="commit"></div>
       <label class="q">Planning horizon</label>
@@ -223,7 +236,7 @@ footer{font-size:.75rem;color:var(--slate);max-width:880px;margin:0 auto;padding
       <div class="opts" id="trend"></div>
       <label class="q">Assumed yearly return on invested HSA dollars</label>
       <div class="opts" id="hsaRet"></div>
-      <div class="nav"><button class="btn ghost" onclick="back()">Back</button><button class="btn primary" onclick="buildPlan()">Build my plan</button></div>
+      <div class="nav"><button class="btn ghost" onclick="back()">Back</button><button class="btn primary" onclick="next()">Continue</button></div>
     </div>
   </div>
 
@@ -1332,6 +1345,11 @@ function renderKidAges() {
   }
 }
 
+function startWizard() {
+  el("introCard").classList.add("hidden");
+  el("dots").classList.remove("hidden");
+  showStep(0);
+}
 function showStep(n) {
   document.querySelectorAll(".step").forEach(s => s.classList.toggle("hidden", +s.dataset.step !== n));
   [...el("dots").children].forEach((d, i) => d.classList.toggle("on", i <= n));
@@ -1339,7 +1357,6 @@ function showStep(n) {
 }
 function next() {
   if (S.step === 0 && !validateHousehold()) return;
-  if (S.step === 1 && !validatePlans()) return;
   showStep(Math.min(S.step + 1, STEPS - 1));
 }
 function back() { showStep(Math.max(S.step - 1, 0)); }
@@ -1427,6 +1444,7 @@ function collectAnswers() {
 
 let LAST = null;
 function buildPlan() {
+  if (!validatePlans()) return;
   const answers = collectAnswers();
   const inputs = {
     goldMonthly: +el("goldMo").value, bronzeMonthly: +el("bronzeMo").value,
@@ -1628,7 +1646,7 @@ function renderResults(r, inputs) {
     ? `Plan pricing: HealthSherpa, pulled ${S.plans.pullDate}.`
     : "Plan pricing: entered by you from your own quote screen.";
 
-  let h = `
+  const heroHtml = `
   <div class="hero">
     <div class="lbl">Here is the money most people hand to an insurance company without thinking</div>
     <div class="big">${fmt(gap)} every month</div>
@@ -1636,10 +1654,9 @@ function renderResults(r, inputs) {
       <div><div class="lbl">That is the gap between your Gold and Bronze premiums. This plan puts ${inputs.commitPct}% of it to work</div><div style="font-weight:700">${fmt(gap * inputs.commitPct / 100)}/mo, for ${inputs.years} years</div></div>
       <div><div class="lbl">Savings you could build</div><div style="font-weight:700">${fmt(last.hsaBalance)}</div></div>
     </div>
-  </div>
+  </div>`;
 
-  ${planChoiceSection(inputs)}
-
+  const hsaHtml = `
   <div class="card">
     <span class="stepbadge">Step 2 · Your safety fund</span>
     <h2>An account that makes the big deductible safe</h2>
@@ -1648,12 +1665,9 @@ function renderResults(r, inputs) {
     <button class="tbltoggle" onclick="el('balTbl').classList.toggle('hidden')">Show the numbers as a table</button>
     <div id="balTbl" class="hidden">${balanceTable(yrs)}</div>
     <div class="src">Assumes ${inputs.hsaReturnPct} percent yearly growth on invested dollars and no withdrawals. Real life includes withdrawals; this shows the engine, not a promise. 2026 contribution limits per IRS Rev. Proc. 2025-19.</div>
-  </div>
+  </div>`;
 
-  ${scenarioCards(r, inputs)}
-
-  ${lifeExplainSection(r, inputs)}
-
+  const yearsHtml = `
   <div class="card">
     <span class="stepbadge">Your year by year plan</span>
     <h2>Nothing to memorize. One or two moves a year.</h2>
@@ -1667,8 +1681,10 @@ function renderResults(r, inputs) {
     ${allocChart(yrs)}
     <button class="tbltoggle" onclick="el('allocTbl').classList.toggle('hidden')">Show the numbers as a table</button>
     <div id="allocTbl" class="hidden">${allocTable(yrs)}</div>
-  </div>
+  </div>`;
 
+  const summaryHtml = `
+  ${actionCard(r, inputs)}
   <div class="card">
     <h2>What this costs and what it builds, side by side</h2>
     <div class="statgrid">
@@ -1698,8 +1714,60 @@ function renderResults(r, inputs) {
     </div>
     <div style="margin-top:14px"><button class="btn ghost" onclick="restart()">Start over</button></div>
   </div>`;
-  box.innerHTML = h;
-  pickYearScenario("healthy");
+
+  const chapters = [
+    { t: "Your health plan", h: heroHtml + planChoiceSection(inputs) },
+    { t: "Your safety fund", h: hsaHtml }
+  ];
+  const lifeH = lifeExplainSection(r, inputs); if (lifeH) chapters.push({ t: "Life insurance", h: lifeH });
+  const scenH = scenarioCards(r, inputs); if (scenH) chapters.push({ t: "Filling the gaps", h: scenH });
+  chapters.push({ t: "Year by year", h: yearsHtml });
+  chapters.push({ t: "Your first moves", h: summaryHtml });
+  window.__chapters = chapters; window.__onePage = false;
+  renderChapter(0);
+}
+
+/* one idea per screen; a link for people who want the whole thing at once */
+function renderChapter(i) {
+  const C = window.__chapters, box = el("results");
+  if (window.__onePage) {
+    box.innerHTML = `<div class="chapnav"><span class="chaptitle">Your full plan</span>
+      <button class="chip alt" onclick="window.__onePage=false;renderChapter(0)">Switch to guided view</button></div>`
+      + C.map(c => c.h).join("");
+  } else {
+    const c = C[i];
+    box.innerHTML = `
+    <div class="chapnav">
+      ${C.map((x, j) => `<button class="chip ${j === i ? "on" : ""}" onclick="renderChapter(${j})" title="${x.t}">${j + 1}</button>`).join("")}
+      <span class="chaptitle">${c.t}</span>
+      <button class="chip alt" onclick="window.__onePage=true;renderChapter(0)">See it all at once</button>
+    </div>
+    ${c.h}
+    <div class="nav" style="margin-top:4px">
+      ${i > 0 ? `<button class="btn ghost" onclick="renderChapter(${i - 1})">Back</button>` : `<button class="btn ghost" onclick="restart()">Start over</button>`}
+      ${i < C.length - 1 ? `<button class="btn primary" onclick="renderChapter(${i + 1})">Next: ${C[i + 1].t}</button>` : `<button class="btn primary" onclick="renderChapter(0)">Review from the top</button>`}
+    </div>`;
+  }
+  if (document.getElementById("yrToggle")) pickYearScenario("healthy");
+  window.scrollTo({ top: 0 });
+}
+
+/* the ending: three concrete moves */
+function actionCard(r, inputs) {
+  const y1 = r.years[0];
+  const buys = y1.moves.map(m => moveTitle(m).toLowerCase());
+  const buyCost = y1.moves.reduce((s, m) => s + m.monthlyCost, 0);
+  return `
+  <div class="card">
+    <span class="stepbadge">Your first three moves</span>
+    <h2>Everything above comes down to this</h2>
+    <div class="move"><div class="k add">1</div><div class="d"><b>At open enrollment, pick the Bronze HSA eligible plan</b>
+      <p>${fmt(inputs.bronzeMonthly)} a month instead of ${fmt(inputs.goldMonthly)}. That single choice frees the ${fmt(inputs.goldMonthly - inputs.bronzeMonthly)} a month this plan runs on.</p></div></div>
+    <div class="move"><div class="k life">2</div><div class="d"><b>Open the HSA and set one automatic transfer</b>
+      <p>About ${fmt(y1.hsaMonthly)} a month to start. Set it and forget it; this becomes your deductible fund.</p></div></div>
+    <div class="move"><div class="k rider">3</div><div class="d"><b>${y1.moves.length ? "Start year one's protection" : "That is it for year one"}</b>
+      <p>${y1.moves.length ? cap(buys.join("; ")) + ", about " + fmt(buyCost) + " a month total. The plan handles when to add the rest, one step a year." : "Your first purchases arrive in later years as the budget grows. For now the savings do the work."}</p></div></div>
+  </div>`;
 }
 
 /* ---------- exposure comparison: grouped horizontal bars ---------- */
@@ -1720,16 +1788,39 @@ function exposureBars(inputs) {
 }
 
 /* ---------- year cards ---------- */
-const PRODUCT_NAMES = {
-  cancer: "Cancer Protection Assurance", accident: "Accident Insurance",
-  hospital: "Hospital Choice", critcare: "Critical Care and Recovery",
-  lsci: "Lump Sum Critical Illness", dental: "Dental", vision: "Vision Now",
-  std: "Short Term Disability", life: ""
+/* outcome language: what the coverage DOES, never the product catalog name */
+const OUTCOME = {
+  cancer: "cancer cash coverage", accident: "accident cash coverage",
+  hospital: "hospital cash coverage", critcare: "critical illness cash coverage",
+  lsci: "a critical illness lump sum", dental: "dental coverage", vision: "vision coverage",
+  std: "paycheck protection"
+};
+const LEVEL_NAMES = {
+  opt1: "starter level", opt2: "middle level", opt3: "top level",
+  level_one: "level 1", level_two: "level 2",
+  ha500: "a $500 hospital admission payout", ha1000: "a $1,000 admission payout",
+  ha1500: "a $1,500 admission payout", ha2000: "a $2,000 admission payout",
+  base10k: "a $10,000 payout", essentials: "essentials level", level_1: "level 1",
+  level_2: "level 2", level_3: "level 3", econ: "", fast: "", vsn: ""
+};
+const RIDER_PLAIN = {
+  IDR: "an extra lump sum the day cancer is first diagnosed",
+  SDR: "coverage for more specified diseases",
+  DCR: "a $10,000 benefit for your kids",
+  EBR: "cash that keeps coming on longer hospital stays",
+  HSSCR: "surgery and daily hospital cash",
+  FOBBR: "a benefit that grows every healthy year",
+  PSHERR: "monthly checks while you recover",
+  LSCBR: "a cancer lump sum on the same policy"
 };
 function moveTitle(m) {
-  const name = PRODUCT_NAMES[m.productId] || "";
-  if (!name || m.kind === "swap" || m.detail.toLowerCase().includes(name.toLowerCase())) return cap(m.detail);
-  return name + ": " + m.detail;
+  const what = OUTCOME[m.productId] || m.productId;
+  const lvl = LEVEL_NAMES[m.optId];
+  if (m.kind === "add") return cap(what) + (lvl ? ", " + lvl : "");
+  if (m.kind === "upgrade") return "Increase your " + what + (lvl ? " to " + lvl : "");
+  if (m.kind === "rider") return "Add on: " + (RIDER_PLAIN[m.riderId] || m.detail);
+  if (m.kind === "swap") return "Switch cancer coverage to a critical illness lump sum that includes cancer";
+  return cap(m.detail);
 }
 /* filed benefit highlights, keyed by product/option or rider */
 function filedBenefits(m) {
