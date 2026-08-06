@@ -96,6 +96,24 @@ table.dv th{color:var(--slate);font-weight:600}
 .hidden{display:none}
 .kidsages{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .kidsages input{width:76px}
+/* ---- teaching illustrations ---- */
+.viz{background:var(--tint);border:1px solid var(--line);border-radius:12px;padding:18px;margin:16px 0}
+.viz svg{width:100%;height:auto;display:block}
+.viz .cap{font-size:.88rem;color:var(--ink);margin-top:12px;line-height:1.5}
+.viz .cap b{color:var(--deep)}
+.viz .waiting{color:var(--slate);font-size:.88rem;text-align:center;padding:10px 0}
+.howto{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:4px 0 20px}
+.howto .p{background:var(--tint);border:1px solid var(--line);border-radius:12px;padding:16px;text-align:center}
+.howto .p svg{width:100%;max-width:130px;height:auto;margin:0 auto 8px;display:block}
+.howto .p .t{font-weight:700;font-size:.92rem;margin-bottom:3px}
+.howto .p .d{font-size:.82rem;color:var(--slate);line-height:1.45}
+.howto .n{display:inline-block;background:var(--aflac-blue);color:#fff;font-size:.7rem;font-weight:800;border-radius:999px;padding:2px 9px;margin-bottom:8px}
+@media (prefers-reduced-motion:no-preference){
+  .viz .grow{transform-origin:bottom;animation:vzgrow .55s ease-out}
+  .viz .fade{animation:vzfade .5s ease-out}
+  @keyframes vzgrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+  @keyframes vzfade{from{opacity:0}to{opacity:1}}
+}
 footer{font-size:.75rem;color:var(--slate);max-width:880px;margin:0 auto;padding:0 20px 40px}
 @media (max-width:640px){ .barrow .lab{width:100px} .hero .big{font-size:1.8rem} }
 </style>
@@ -115,6 +133,7 @@ footer{font-size:.75rem;color:var(--slate);max-width:880px;margin:0 auto;padding
     <div class="card step" data-step="0">
       <h2>Your household</h2>
       <p class="sub">This sets the coverage tier every number in the plan is priced on.</p>
+      <div class="howto" id="howto"></div>
       <div class="row">
         <div><label class="q">ZIP code</label><input type="text" id="zip" inputmode="numeric" maxlength="5" placeholder="37201"></div>
         <div><label class="q">Your age</label><input type="number" id="age1" min="18" max="74" placeholder="38"></div>
@@ -152,6 +171,7 @@ footer{font-size:.75rem;color:var(--slate);max-width:880px;margin:0 auto;padding
           <div><label class="q">Bronze out of pocket maximum</label><input type="number" id="bronzeOop" min="0" placeholder="15000"></div>
         </div>
       </div>
+      <div class="viz" id="gapViz"></div>
       <div class="nav"><button class="btn ghost" onclick="back()">Back</button><button class="btn primary" onclick="next()">Continue</button></div>
     </div>
 
@@ -159,6 +179,7 @@ footer{font-size:.75rem;color:var(--slate);max-width:880px;margin:0 auto;padding
     <div class="card step hidden" data-step="2">
       <h2>What should this plan protect against?</h2>
       <p class="sub">Honest answers here drive which products the plan reaches for first.</p>
+      <div class="viz" id="shieldViz"></div>
       <label class="q">If you had to pay your Bronze deductible today, could you?</label>
       <div class="opts" id="afford"></div>
       <label class="q">Any family history you think about? <span class="hint">Choose all that apply.</span></label>
@@ -176,6 +197,7 @@ footer{font-size:.75rem;color:var(--slate);max-width:880px;margin:0 auto;padding
     <div class="card step hidden" data-step="3">
       <h2>Life insurance</h2>
       <p class="sub">Laddering means buying protection in layers over time instead of one big policy on day one.</p>
+      <div class="viz" id="ladderViz"></div>
       <label class="q">Do you have life insurance today?</label>
       <div class="opts" id="lifeToday"></div>
       <label class="q">If something happened to you, how many years of your income would your family need?</label>
@@ -191,6 +213,7 @@ footer{font-size:.75rem;color:var(--slate);max-width:880px;margin:0 auto;padding
       <p class="sub">You control how much of the premium savings goes to work, and for how long.</p>
       <label class="q">How much of the monthly savings will you commit to protection and saving?</label>
       <div class="opts" id="commit"></div>
+      <div class="viz" id="commitViz"></div>
       <label class="q">Planning horizon</label>
       <div class="opts" id="horizon"></div>
       <label class="q">Assumed yearly growth in health premiums <span class="hint">Both plans grow together, so the gap grows too. KFF reported sharp 2026 increases; the long run average is lower.</span></label>
@@ -1203,6 +1226,165 @@ function project(inputs) {
 }
 
 
+/* ============================ TEACHING ILLUSTRATIONS ============================
+   Inline SVG only. Every figure below is drawn from the same numbers the results
+   page uses, so nothing here can drift from the math. When inputs are missing the
+   figures show a neutral waiting state, never an estimate.                      */
+const VZ = { hsa: "#00A7E1", deep: "#0B5D8A", gold: "#F89728", good: "#1E7B4F", slate: "#5B6B7B", line: "#E5EAEE" };
+
+function vzInputs() {
+  const g = +el("goldMo").value, b = +el("bronzeMo").value;
+  const gd = +el("goldDed").value, bd = +el("bronzeDed").value, bo = +el("bronzeOop").value;
+  return { g, b, gd, bd, bo, gap: (g && b && g > b) ? g - b : 0, ready: !!(g && b && g > b) };
+}
+function vzWait(id, msg) { const n = el(id); if (n) n.innerHTML = '<div class="waiting">' + msg + "</div>"; }
+
+/* ---------- step 1: how this works, three panels ---------- */
+function renderHowTo() {
+  const box = el("howto"); if (!box) return;
+  const panels = [
+    { n: "1", t: "Two plans, two prices",
+      d: "A Gold plan costs more every month. A Bronze HSA plan costs less but has a higher deductible.",
+      svg: '<svg viewBox="0 0 130 80" role="img" aria-label="A tall bar next to a shorter bar">' +
+           '<rect x="22" y="14" width="34" height="52" rx="4" fill="' + VZ.deep + '"/>' +
+           '<rect x="74" y="38" width="34" height="28" rx="4" fill="' + VZ.hsa + '"/>' +
+           '<text x="39" y="76" text-anchor="middle" font-size="9" fill="' + VZ.slate + '">Gold</text>' +
+           '<text x="91" y="76" text-anchor="middle" font-size="9" fill="' + VZ.slate + '">Bronze</text></svg>' },
+    { n: "2", t: "Bank the difference",
+      d: "Instead of spending it on premium, the monthly difference goes into your HSA and protection.",
+      svg: '<svg viewBox="0 0 130 80" role="img" aria-label="An arrow moving money into a savings account">' +
+           '<rect x="12" y="30" width="30" height="22" rx="4" fill="' + VZ.gold + '"/>' +
+           '<path d="M48 41 H80" stroke="' + VZ.slate + '" stroke-width="3" stroke-linecap="round"/>' +
+           '<path d="M74 34 L82 41 L74 48" fill="none" stroke="' + VZ.slate + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+           '<rect x="88" y="22" width="30" height="38" rx="5" fill="none" stroke="' + VZ.hsa + '" stroke-width="3"/>' +
+           '<path d="M96 41 h14 M103 34 v14" stroke="' + VZ.hsa + '" stroke-width="3" stroke-linecap="round"/></svg>' },
+    { n: "3", t: "It builds and it shields",
+      d: "That money grows tax free for the future, and it is there to absorb the deductible if you need it.",
+      svg: '<svg viewBox="0 0 130 80" role="img" aria-label="A rising stack of savings beside a shield">' +
+           '<rect x="14" y="52" width="16" height="14" rx="3" fill="' + VZ.hsa + '" opacity=".45"/>' +
+           '<rect x="34" y="40" width="16" height="26" rx="3" fill="' + VZ.hsa + '" opacity=".7"/>' +
+           '<rect x="54" y="26" width="16" height="40" rx="3" fill="' + VZ.hsa + '"/>' +
+           '<path d="M97 16 L116 24 V42 C116 54 107 62 97 66 C87 62 78 54 78 42 V24 Z" fill="none" stroke="' + VZ.good + '" stroke-width="3" stroke-linejoin="round"/>' +
+           '<path d="M89 41 l6 7 l11 -14" fill="none" stroke="' + VZ.good + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>' }
+  ];
+  box.innerHTML = panels.map(p =>
+    '<div class="p"><span class="n">' + p.n + "</span>" + p.svg +
+    '<div class="t">' + p.t + '</div><div class="d">' + p.d + "</div></div>").join("");
+}
+
+/* ---------- step 2: the premium gap becomes your HSA ---------- */
+function renderGapViz() {
+  const i = vzInputs();
+  if (!i.ready) { vzWait("gapViz", "Pull your plans or enter both premiums above, and the picture of your monthly gap appears here."); return; }
+  const W = 620, H = 250, top = 46, base = 196, colH = base - top;
+  const bH = Math.round(colH * (i.b / i.g)), gapH = colH - bH;
+  const yr = i.gap * 12;
+  const svg =
+    '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Gold premium of ' + fmt(i.g) +
+      " versus Bronze premium of " + fmt(i.b) + ", a monthly difference of " + fmt(i.gap) + ' moving into an H S A">' +
+    '<text x="16" y="22" font-size="13" font-weight="700" fill="' + VZ.slate + '">Every month</text>' +
+    // gold column: bronze-equivalent base + the gap on top
+    '<g class="grow"><rect x="40" y="' + (top + gapH) + '" width="86" height="' + bH + '" rx="5" fill="' + VZ.deep + '"/>' +
+    '<rect x="40" y="' + top + '" width="86" height="' + gapH + '" rx="5" fill="' + VZ.gold + '"/></g>' +
+    '<text x="83" y="' + (top - 10) + '" text-anchor="middle" font-size="15" font-weight="800" fill="' + VZ.deep + '">' + fmt(i.g) + "</text>" +
+    '<text x="83" y="' + (base + 20) + '" text-anchor="middle" font-size="12" fill="' + VZ.slate + '">Gold plan</text>' +
+    // bronze column
+    '<g class="grow"><rect x="166" y="' + (top + gapH) + '" width="86" height="' + bH + '" rx="5" fill="' + VZ.hsa + '"/></g>' +
+    '<text x="209" y="' + (top + gapH - 10) + '" text-anchor="middle" font-size="15" font-weight="800" fill="' + VZ.hsa + '">' + fmt(i.b) + "</text>" +
+    '<text x="209" y="' + (base + 20) + '" text-anchor="middle" font-size="12" fill="' + VZ.slate + '">Bronze HSA plan</text>' +
+    // the gap, called out and carried across
+    '<g class="fade"><path d="M272 ' + (top + gapH / 2) + " H332" + '" stroke="' + VZ.gold + '" stroke-width="3" stroke-dasharray="6 5" stroke-linecap="round"/>' +
+    '<path d="M324 ' + (top + gapH / 2 - 8) + " L334 " + (top + gapH / 2) + " L324 " + (top + gapH / 2 + 8) +
+      '" fill="none" stroke="' + VZ.gold + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<rect x="344" y="' + (top - 4) + '" width="258" height="122" rx="10" fill="#fff" stroke="' + VZ.hsa + '" stroke-width="2"/>' +
+    '<text x="364" y="' + (top + 22) + '" font-size="12" font-weight="700" fill="' + VZ.slate + '">GOES TO YOUR HSA</text>' +
+    '<text x="364" y="' + (top + 60) + '" font-size="30" font-weight="800" fill="' + VZ.deep + '">' + fmt(i.gap) + "</text>" +
+    '<text x="364" y="' + (top + 82) + '" font-size="13" fill="' + VZ.slate + '">every month</text>' +
+    '<text x="364" y="' + (top + 106) + '" font-size="13" fill="' + VZ.good + '" font-weight="700">' + fmt(yr) + " a year</text></g>" +
+    '<text x="16" y="' + (H - 8) + '" font-size="11" fill="' + VZ.slate + '">Premiums shown monthly. The orange band is the difference you stop paying.</text>' +
+    "</svg>";
+  el("gapViz").innerHTML = svg +
+    '<div class="cap">Gold costs <b>' + fmt(i.gap) + " more every month</b>. The strategy is simple: take the cheaper plan and send that " +
+    fmt(i.gap) + " to your own account instead of the insurance company. Over a year that is <b>" + fmt(yr) + "</b> you keep.</div>";
+}
+
+/* ---------- step 3: how fast the HSA covers the deductible ---------- */
+function renderShieldViz() {
+  const i = vzInputs();
+  if (!i.ready || !i.bd) { vzWait("shieldViz", "Once your two plans are in, this shows how quickly the money you bank covers your Bronze deductible."); return; }
+  const perMo = i.gap, months = Math.max(1, Math.ceil(i.bd / perMo));
+  const W = 620, H = 150, x0 = 20, x1 = 600, trkY = 54, trkH = 34;
+  const yr1 = Math.min(perMo * 12, i.bd), pct = yr1 / i.bd;
+  const fillW = Math.round((x1 - x0) * pct);
+  const svg =
+    '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="After twelve months you would have ' + fmt(yr1) +
+      " of the " + fmt(i.bd) + ' deductible set aside">' +
+    '<text x="' + x0 + '" y="30" font-size="13" font-weight="700" fill="' + VZ.slate + '">Your Bronze deductible: ' + fmt(i.bd) + "</text>" +
+    '<rect x="' + x0 + '" y="' + trkY + '" width="' + (x1 - x0) + '" height="' + trkH + '" rx="6" fill="#fff" stroke="' + VZ.line + '" stroke-width="2"/>' +
+    '<rect x="' + x0 + '" y="' + trkY + '" width="' + fillW + '" height="' + trkH + '" rx="6" fill="' + VZ.hsa + '" class="fade"/>' +
+    (pct < 1 ? '<text x="' + (x0 + fillW + 10) + '" y="' + (trkY + 23) + '" font-size="13" font-weight="700" fill="' + VZ.deep + '">' + fmt(yr1) + " after 12 months</text>"
+             : '<text x="' + (x0 + 12) + '" y="' + (trkY + 23) + '" font-size="13" font-weight="800" fill="#fff">Fully covered inside 12 months</text>') +
+    '<text x="' + x0 + '" y="' + (trkY + trkH + 26) + '" font-size="12" fill="' + VZ.slate + '">Banking ' + fmt(perMo) +
+      " a month covers the whole deductible in about " + months + (months === 1 ? " month" : " months") + ".</text>" +
+    "</svg>";
+  el("shieldViz").innerHTML = svg +
+    '<div class="cap">This is the honest tradeoff. A Bronze plan exposes you to a bigger deductible, but the money you are no longer sending to premium ' +
+    'goes into an account you own. Banking the full difference, it takes about <b>' + months + (months === 1 ? " month" : " months") +
+    '</b> before that account covers the whole deductible on its own.</div>';
+}
+
+/* ---------- step 4: why a ladder beats one big policy ---------- */
+function renderLadderViz() {
+  const W = 620, H = 180, base = 132, x0 = 40, colW = 96, gap = 22;
+  const layers = [
+    { l: "Now", h: 96, o: 1, c: "Young kids, mortgage, peak need" },
+    { l: "In 10 years", h: 66, o: .75, c: "" },
+    { l: "In 20 years", h: 40, o: .5, c: "" },
+    { l: "Later", h: 20, o: .3, c: "" }
+  ];
+  let bars = "", labs = "";
+  layers.forEach((L, k) => {
+    const x = x0 + k * (colW + gap);
+    bars += '<g class="grow"><rect x="' + x + '" y="' + (base - L.h) + '" width="' + colW + '" height="' + L.h +
+            '" rx="5" fill="' + VZ.deep + '" opacity="' + L.o + '"/></g>';
+    labs += '<text x="' + (x + colW / 2) + '" y="' + (base + 20) + '" text-anchor="middle" font-size="11" fill="' + VZ.slate + '">' + L.l + "</text>";
+  });
+  el("ladderViz").innerHTML =
+    '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Coverage need starting high and stepping down over time">' +
+    '<text x="' + x0 + '" y="26" font-size="13" font-weight="700" fill="' + VZ.slate + '">How much life cover you actually need</text>' +
+    bars + labs +
+    '<line x1="' + x0 + '" y1="' + base + '" x2="' + (W - 20) + '" y2="' + base + '" stroke="' + VZ.line + '" stroke-width="2"/>' +
+    '<text x="' + x0 + '" y="' + (H - 8) + '" font-size="11" fill="' + VZ.slate + '">Each block is a layer you can let expire when the need behind it is gone.</text></svg>' +
+    '<div class="cap">Your need for life insurance is <b>highest right now</b> and shrinks as the mortgage comes down and the kids grow up. ' +
+    'A ladder buys separate layers that expire on their own schedule, so you are not paying for coverage you have outgrown.</div>';
+}
+
+/* ---------- step 5: what committing actually means ---------- */
+function renderCommitViz() {
+  const i = vzInputs(), pctSel = +(picked("commit") || 75);
+  if (!i.ready) { vzWait("commitViz", "Your monthly gap appears here once both premiums are entered."); return; }
+  const work = i.gap * pctSel / 100, keep = i.gap - work;
+  const W = 620, H = 132, x0 = 20, x1 = 600, y = 44, h = 40;
+  const wW = Math.round((x1 - x0) * (pctSel / 100));
+  el("commitViz").innerHTML =
+    '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Of ' + fmt(i.gap) + " a month, " + fmt(work) +
+      " goes to work and " + fmt(keep) + ' stays in your pocket">' +
+    '<text x="' + x0 + '" y="28" font-size="13" font-weight="700" fill="' + VZ.slate + '">Your ' + fmt(i.gap) + " monthly gap, split</text>" +
+    '<rect x="' + x0 + '" y="' + y + '" width="' + (x1 - x0) + '" height="' + h + '" rx="6" fill="#fff" stroke="' + VZ.line + '" stroke-width="2"/>' +
+    '<rect x="' + x0 + '" y="' + y + '" width="' + wW + '" height="' + h + '" rx="6" fill="' + VZ.hsa + '" class="fade"/>' +
+    '<text x="' + (x0 + 12) + '" y="' + (y + 26) + '" font-size="14" font-weight="800" fill="#fff">' + fmt(work) + " to work</text>" +
+    (keep > 0 ? '<text x="' + (x1 - 12) + '" y="' + (y + 26) + '" text-anchor="end" font-size="13" font-weight="700" fill="' + VZ.slate + '">' + fmt(keep) + " stays yours</text>" : "") +
+    '<text x="' + x0 + '" y="' + (y + h + 28) + '" font-size="12" fill="' + VZ.slate + '">That is ' + fmt(work * 12) + " a year building protection and savings.</text></svg>" +
+    '<div class="cap">Committing <b>' + pctSel + "%</b> puts <b>" + fmt(work) + " a month</b> to work" +
+    (keep > 0 ? ". The other " + fmt(keep) + " simply stays in your take home pay." : ", the whole difference.") +
+    " Nothing here assumes you commit more than you choose.</div>";
+}
+
+/* redraw everything that depends on the plan numbers */
+function refreshViz() {
+  try { renderGapViz(); renderShieldViz(); renderCommitViz(); } catch (e) { /* never block the wizard on a figure */ }
+}
+
 /* ============================ CONFIG ============================ */
 const CONFIG = {
   // Cloudflare Worker proxy for HealthSherpa. Leave "" until credentials are
@@ -1285,7 +1467,7 @@ function initWizard() {
     { v: "under50", label: "Under $50K" }, { v: "b50to100", label: "$50K to $100K" },
     { v: "b100to150", label: "$100K to $150K" }, { v: "over150", label: "Over $150K" }
   ]);
-  group("commit", [{ v: "50", label: "Half of it" }, { v: "75", label: "Three quarters" }, { v: "100", label: "All of it" }]);
+  group("commit", [{ v: "50", label: "Half of it" }, { v: "75", label: "Three quarters" }, { v: "100", label: "All of it" }], false, renderCommitViz);
   group("horizon", [{ v: "5", label: "5 years" }, { v: "7", label: "7 years" }, { v: "10", label: "10 years" }]);
   group("trend", [{ v: "4", label: "4 percent" }, { v: "6", label: "6 percent" }, { v: "8", label: "8 percent" }]);
   group("hsaRet", [{ v: "0", label: "Cash, 0 percent" }, { v: "4", label: "Conservative, 4 percent" }, { v: "6", label: "Balanced, 6 percent" }]);
@@ -1295,6 +1477,13 @@ function initWizard() {
     el("hsPull").disabled = true;
     el("hsStatus").textContent = "Live plan pull is not connected yet. Enter your quote numbers below.";
   }
+
+  // teaching figures: draw the static ones, then keep the live ones in step with the inputs
+  renderHowTo(); renderLadderViz();
+  ["goldMo", "goldDed", "bronzeMo", "bronzeDed", "bronzeOop"].forEach(id => {
+    const n = el(id); if (n) n.addEventListener("input", refreshViz);
+  });
+  refreshViz();
 }
 function renderKidAges() {
   S.kids = Math.max(1, Math.min(8, parseInt(el("kids").value || "1", 10)));
@@ -1309,7 +1498,7 @@ function renderKidAges() {
 function showStep(n) {
   document.querySelectorAll(".step").forEach(s => s.classList.toggle("hidden", +s.dataset.step !== n));
   [...el("dots").children].forEach((d, i) => d.classList.toggle("on", i <= n));
-  S.step = n; window.scrollTo({ top: 0, behavior: "smooth" });
+  S.step = n; refreshViz(); window.scrollTo({ top: 0, behavior: "smooth" });
 }
 function next() {
   if (S.step === 0 && !validateHousehold()) return;
@@ -1371,6 +1560,7 @@ async function pullPlans() {
     S.plans.goldName = data.gold.name; S.plans.bronzeName = data.bronzeHdhp.name;
     el("hsStatus").textContent = "Source: HealthSherpa, pulled " + S.plans.pullDate + ". " +
       (data.gold.name || "Gold plan") + " and " + (data.bronzeHdhp.name || "Bronze HDHP") + ".";
+    refreshViz();
   } catch (e) {
     S.plans.pulled = false;
     el("hsStatus").textContent = "";
@@ -1689,3 +1879,4 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 </body></html>
+
