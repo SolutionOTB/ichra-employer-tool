@@ -96,6 +96,27 @@ table.dv th{color:var(--slate);font-weight:600}
 .hidden{display:none}
 .kidsages{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .kidsages input{width:76px}
+/* ---- brand ---- */
+header.site .brand{display:flex;align-items:center;gap:10px}
+header.site .brand-mark{width:26px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+header.site .brand-mark svg{width:100%;height:100%}
+/* ---- plan detail cards ---- */
+.pd{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+.pd .c{border:1px solid var(--line);border-radius:12px;padding:16px;background:#fff}
+.pd .c.bz{border-color:var(--aflac-blue);box-shadow:0 0 0 1px var(--aflac-blue) inset}
+.pd .badge{display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;border-radius:999px;padding:3px 10px;margin-bottom:8px}
+.pd .badge.g{background:#FDF1E2;color:#9A5B00}
+.pd .badge.b{background:var(--tint);color:var(--deep)}
+.pd .nm{font-weight:700;font-size:.95rem;line-height:1.35;margin-bottom:2px}
+.pd .iss{font-size:.8rem;color:var(--slate);margin-bottom:10px}
+.pd .prem{font-size:1.6rem;font-weight:800;color:var(--deep);line-height:1.1}
+.pd .premlbl{font-size:.78rem;color:var(--slate);margin-bottom:12px}
+.pd dl{display:grid;grid-template-columns:auto 1fr;gap:5px 10px;font-size:.83rem;margin:0}
+.pd dt{color:var(--slate)}
+.pd dd{margin:0;text-align:right;font-weight:600}
+.pd .sbc{display:inline-block;margin-top:12px;font-size:.8rem;color:var(--deep)}
+.pd .hsaflag{margin-top:10px;font-size:.8rem;font-weight:700;color:var(--good)}
+@media (max-width:640px){ .pd{grid-template-columns:1fr} }
 /* ---- teaching illustrations ---- */
 .viz{background:var(--tint);border:1px solid var(--line);border-radius:12px;padding:18px;margin:16px 0}
 .viz svg{width:100%;height:auto;display:block}
@@ -120,8 +141,19 @@ footer{font-size:.75rem;color:var(--slate);max-width:880px;margin:0 auto;padding
 </head>
 <body>
 <header class="site"><div class="wrap">
-  <h1>Coverage and savings planner</h1>
-  <div class="tag">A decision support tool from SolutionOTB</div>
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 30 36" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0" y="0" width="30" height="36" fill="#1A1A1A"/>
+        <rect x="2.5" y="2.5" width="25" height="31" fill="none" stroke="#F8F6F1" stroke-width="1.5"/>
+        <text x="15" y="16.5" text-anchor="middle" font-weight="800" font-size="11" fill="#F8F6F1">O</text>
+        <line x1="6" y1="19" x2="24" y2="19" stroke="#F8F6F1" stroke-width="0.8" opacity="0.55"/>
+        <text x="15" y="30" text-anchor="middle" font-weight="800" font-size="11" fill="#F8F6F1">B</text>
+      </svg>
+    </span>
+    <h1>Coverage and savings planner</h1>
+  </div>
+  <div class="tag">A decision support tool from OTB Solutions</div>
 </div></header>
 <div class="wrap">
 
@@ -171,6 +203,7 @@ footer{font-size:.75rem;color:var(--slate);max-width:880px;margin:0 auto;padding
           <div><label class="q">Bronze out of pocket maximum</label><input type="number" id="bronzeOop" min="0" placeholder="15000"></div>
         </div>
       </div>
+      <div id="planDetail"></div>
       <div class="viz" id="gapViz"></div>
       <div class="nav"><button class="btn ghost" onclick="back()">Back</button><button class="btn primary" onclick="next()">Continue</button></div>
     </div>
@@ -210,8 +243,9 @@ footer{font-size:.75rem;color:var(--slate);max-width:880px;margin:0 auto;padding
     <!-- Step 5: plan settings -->
     <div class="card step hidden" data-step="4">
       <h2>Plan settings</h2>
-      <p class="sub">You control how much of the premium savings goes to work, and for how long.</p>
-      <label class="q">How much of the monthly savings will you commit to protection and saving?</label>
+      <p class="sub">You decide how much of the money you free up goes to work, and for how long.</p>
+      <label class="q" id="commitQ">How much of the money you free up do you want to put to work?</label>
+      <div class="hint" id="commitHint">Choosing the Bronze plan instead of Gold lowers your premium. This is what you do with that difference.</div>
       <div class="opts" id="commit"></div>
       <div class="viz" id="commitViz"></div>
       <label class="q">Planning horizon</label>
@@ -1362,6 +1396,18 @@ function renderLadderViz() {
 /* ---------- step 5: what committing actually means ---------- */
 function renderCommitViz() {
   const i = vzInputs(), pctSel = +(picked("commit") || 75);
+  // name the actual dollar figure in the question, so "the money you free up" is never abstract
+  const q = el("commitQ"), qh = el("commitHint");
+  if (q) {
+    q.textContent = i.ready
+      ? "You free up " + fmt(i.gap) + " a month by choosing Bronze instead of Gold. How much of that do you want to put to work?"
+      : "How much of the money you free up do you want to put to work?";
+  }
+  if (qh) {
+    qh.textContent = i.ready
+      ? "Gold would cost you " + fmt(i.g) + " a month. Bronze costs " + fmt(i.b) + ". Whatever you do not commit simply stays in your paycheck."
+      : "Choosing the Bronze plan instead of Gold lowers your premium. This is what you do with that difference.";
+  }
   if (!i.ready) { vzWait("commitViz", "Your monthly gap appears here once both premiums are entered."); return; }
   const work = i.gap * pctSel / 100, keep = i.gap - work;
   const W = 620, H = 132, x0 = 20, x1 = 600, y = 44, h = 40;
@@ -1380,9 +1426,44 @@ function renderCommitViz() {
     " Nothing here assumes you commit more than you choose.</div>";
 }
 
+/* ---------- what these two plans actually are (live pull only) ---------- */
+function renderPlanDetail() {
+  const box = el("planDetail"); if (!box) return;
+  const d = S.plans.detail;
+  // only shown for a live pull: manual entry has no plan facts behind it
+  if (!d || !d.gold || !d.bronzeHdhp) { box.innerHTML = ""; return; }
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const row = (k, v) => v ? "<dt>" + esc(k) + "</dt><dd>" + esc(v) + "</dd>" : "";
+  const card = (p, kind) => {
+    const isB = kind === "b";
+    return '<div class="c' + (isB ? " bz" : "") + '">' +
+      '<span class="badge ' + kind + '">' + (isB ? "Bronze, HSA eligible" : "Gold") + "</span>" +
+      '<div class="nm">' + esc(p.name) + "</div>" +
+      (p.issuer ? '<div class="iss">' + esc(p.issuer) + (p.planType ? " &middot; " + esc(p.planType) : "") +
+        (p.network ? " &middot; " + esc(p.network) + " network" : "") + "</div>" : "") +
+      '<div class="prem">' + fmt(p.premium) + "</div>" +
+      '<div class="premlbl">per month</div>' +
+      "<dl>" +
+      row("Deductible", p.deductible ? fmt(p.deductible) : "") +
+      row("Out of pocket max", p.oopMax ? fmt(p.oopMax) : "") +
+      row("Primary care", p.primaryCare) +
+      row("Specialist", p.specialist) +
+      row("Urgent care", p.urgentCare) +
+      row("Generic drugs", p.genericRx) +
+      "</dl>" +
+      (isB && p.hsaEligible ? '<div class="hsaflag">You can fund an HSA with this plan</div>' : "") +
+      (p.sbcUrl ? '<a class="sbc" href="' + esc(p.sbcUrl) + '" target="_blank" rel="noopener">Read the full benefits summary</a>' : "") +
+      "</div>";
+  };
+  box.innerHTML =
+    "<h3 style=\"margin-top:18px\">What these two plans actually are</h3>" +
+    '<p class="hint">These are the lowest priced plan at each level in your county. The Bronze plan trades a higher deductible for a lower premium, and it is the one that lets you fund an HSA.</p>' +
+    '<div class="pd">' + card(d.gold, "g") + card(d.bronzeHdhp, "b") + "</div>";
+}
+
 /* redraw everything that depends on the plan numbers */
 function refreshViz() {
-  try { renderGapViz(); renderShieldViz(); renderCommitViz(); } catch (e) { /* never block the wizard on a figure */ }
+  try { renderPlanDetail(); renderGapViz(); renderShieldViz(); renderCommitViz(); } catch (e) { /* never block the wizard on a figure */ }
 }
 
 /* ============================ CONFIG ============================ */
@@ -1557,6 +1638,7 @@ async function pullPlans() {
     el("bronzeDed").value = Math.round(data.bronzeHdhp.deductible);
     el("bronzeOop").value = Math.round(data.bronzeHdhp.oopMax);
     S.plans.pulled = true; S.plans.pullDate = data.pulledAt || new Date().toISOString().slice(0, 10);
+    S.plans.detail = { gold: data.gold, bronzeHdhp: data.bronzeHdhp };
     S.plans.goldName = data.gold.name; S.plans.bronzeName = data.bronzeHdhp.name;
     el("hsStatus").textContent = "Source: HealthSherpa, pulled " + S.plans.pullDate + ". " +
       (data.gold.name || "Gold plan") + " and " + (data.bronzeHdhp.name || "Bronze HDHP") + ".";
@@ -1631,7 +1713,7 @@ function renderResults(r, inputs) {
     <h2>The tradeoff you are making</h2>
     <p class="sub">Gold costs more every month. Bronze costs less but exposes you to a bigger deductible. This plan closes that exposure two ways at once: cash in an HSA, and insurance that pays cash when specific things happen.</p>
     ${exposureBars(inputs)}
-    <div class="src">${planSrc} Deductible and out of pocket figures are annual; premiums are monthly. Sides are compared in the same units.</div>
+    <div class="src">${planSrc} Each comparison above holds one unit and has its own scale: the first is monthly premium, the rest are total cost for a full year. Premiums are never drawn against deductibles, because they are not the same thing.</div>
   </div>
 
   <div class="card">
@@ -1690,21 +1772,55 @@ function renderResults(r, inputs) {
   box.innerHTML = h;
 }
 
-/* ---------- exposure comparison: grouped horizontal bars ---------- */
-function exposureBars(inputs) {
-  const P = CONFIG.PALETTE;
-  const rows = [
-    { lab: "Gold premium /mo", v: inputs.goldMonthly, c: P.life },
-    { lab: "Bronze premium /mo", v: inputs.bronzeMonthly, c: P.hsa },
-    { lab: "Gold deductible /yr", v: inputs.goldDeductible, c: P.life },
-    { lab: "Bronze deductible /yr", v: inputs.bronzeDeductible, c: P.hsa },
-    { lab: "Bronze out of pocket max /yr", v: inputs.bronzeOopMax, c: P.aflac }
-  ].filter(r => r.v > 0);
-  const max = Math.max(...rows.map(r => r.v));
-  return rows.map(r => `
+/* ---------- exposure comparison ----------
+   Each group holds ONE unit and is scaled on its own axis. Premiums are monthly,
+   so they are never drawn against annual deductibles. The scenario group converts
+   both plans to total annual cost, which is the only way the two are comparable. */
+function barGroup(title, note, rows) {
+  const live = rows.filter(r => r.v > 0);
+  if (!live.length) return "";
+  const max = Math.max(...live.map(r => r.v));
+  return `<h3 style="margin-top:20px">${title}</h3>` +
+    (note ? `<p class="hint" style="margin-bottom:8px">${note}</p>` : "") +
+    live.map(r => `
     <div class="barrow"><div class="lab">${r.lab}</div>
       <div class="trk"><div class="fill" style="width:${Math.max(r.v / max * 100, 8)}%;background:${r.c}">${fmt(r.v)}</div></div>
     </div>`).join("");
+}
+function exposureBars(inputs) {
+  const P = CONFIG.PALETTE;
+  const gMo = inputs.goldMonthly, bMo = inputs.bronzeMonthly;
+  const gYr = gMo * 12, bYr = bMo * 12;
+  const gapYr = gYr - bYr;
+  const gBad = gYr + inputs.goldDeductible, bBad = bYr + inputs.bronzeDeductible;
+  const diffBad = bBad - gBad;
+
+  let out = barGroup("What you pay every month", "Premium only, before anyone uses the plan.", [
+    { lab: "Gold", v: gMo, c: P.life },
+    { lab: "Bronze HSA", v: bMo, c: P.hsa }
+  ]);
+
+  out += barGroup("A year where nobody gets sick", "Twelve months of premium, nothing else.", [
+    { lab: "Gold", v: gYr, c: P.life },
+    { lab: "Bronze HSA", v: bYr, c: P.hsa }
+  ]);
+  if (gapYr > 0) out += `<p class="alloc"><b>Bronze keeps ${fmt(gapYr)} in your pocket</b> in a healthy year.</p>`;
+
+  if (inputs.goldDeductible > 0 && inputs.bronzeDeductible > 0) {
+    out += barGroup("A year where you spend the whole deductible",
+      "Twelve months of premium plus the full deductible. Same unit on both sides, so the two plans are actually comparable.", [
+      { lab: "Gold", v: gBad, c: P.life },
+      { lab: "Bronze HSA", v: bBad, c: P.hsa }
+    ]);
+    out += diffBad > 0
+      ? `<p class="alloc">In that year Bronze costs <b>${fmt(diffBad)} more</b> than Gold. That is the exposure this plan is built to cover, and it is why the HSA gets funded first.</p>`
+      : `<p class="alloc">Even in that year Bronze still costs <b>${fmt(Math.abs(diffBad))} less</b> than Gold.</p>`;
+  }
+
+  if (inputs.bronzeOopMax > 0) {
+    out += `<p class="alloc" style="margin-top:14px">Your Bronze out of pocket maximum is <b>${fmt(inputs.bronzeOopMax)}</b> a year. That is the ceiling, the most the plan can ask of you before it pays everything.</p>`;
+  }
+  return out;
 }
 
 /* ---------- year cards ---------- */
