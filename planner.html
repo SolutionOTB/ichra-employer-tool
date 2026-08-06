@@ -179,7 +179,7 @@ footer{font-size:.75rem;color:var(--slate);max-width:880px;margin:0 auto;padding
       </div>
       <div id="manualEntry">
         <h3 style="margin-top:18px">Enter your quote numbers</h3>
-        <p class="hint">Copy these from your marketplace or HealthSherpa quote screen. Use monthly premiums after any subsidy.</p>
+        <p class="hint">Where do these come from? Open your quote on HealthSherpa or healthcare.gov. Each plan card shows its monthly premium, deductible, and out of pocket maximum. Use monthly premiums after any subsidy.</p>
         <div class="row">
           <div><label class="q">Gold plan monthly premium</label><input type="number" id="goldMo" min="0" placeholder="1650"></div>
           <div><label class="q">Gold plan deductible</label><input type="number" id="goldDed" min="0" placeholder="1500"></div>
@@ -198,7 +198,7 @@ footer{font-size:.75rem;color:var(--slate);max-width:880px;margin:0 auto;padding
     <div class="card step hidden" data-step="1">
       <h2>What should this plan protect against?</h2>
       <p class="sub">Honest answers here drive which products the plan reaches for first.</p>
-      <label class="q">If you had to pay your Bronze deductible today, could you?</label>
+      <label class="q">If a big medical bill landed today, a few thousand dollars, could you pay it?</label>
       <div class="opts" id="afford"></div>
       <label class="q">Any family history you think about? <span class="hint">Choose all that apply.</span></label>
       <div class="opts multi" id="hist"></div>
@@ -232,10 +232,13 @@ footer{font-size:.75rem;color:var(--slate);max-width:880px;margin:0 auto;padding
       <div class="opts" id="commit"></div>
       <label class="q">Planning horizon</label>
       <div class="opts" id="horizon"></div>
-      <label class="q">Assumed yearly growth in health premiums <span class="hint">Both plans grow together, so the gap grows too. KFF reported sharp 2026 increases; the long run average is lower.</span></label>
-      <div class="opts" id="trend"></div>
-      <label class="q">Assumed yearly return on invested HSA dollars</label>
-      <div class="opts" id="hsaRet"></div>
+      <details style="margin-top:16px">
+        <summary style="cursor:pointer;font-weight:600;color:var(--deep)">Fine tuning (optional)</summary>
+        <label class="q">Assumed yearly growth in health premiums <span class="hint">Both plans grow together, so the gap grows too.</span></label>
+        <div class="opts" id="trend"></div>
+        <label class="q">Assumed yearly return on saved dollars</label>
+        <div class="opts" id="hsaRet"></div>
+      </details>
       <div class="nav"><button class="btn ghost" onclick="back()">Back</button><button class="btn primary" onclick="next()">Continue</button></div>
     </div>
   </div>
@@ -1126,7 +1129,8 @@ function candidateMoves(state, catalog, tier, a) {
       gain: "A permanent layer that stays after the term rungs expire and builds cash value." });
   }
 
-  return mv.filter(m => m.monthlyCost !== null && m.monthlyCost > 0);
+  const exclude = a.exclude || [];
+  return mv.filter(m => m.monthlyCost !== null && m.monthlyCost > 0 && !exclude.includes(m.category));
 }
 
 /* ---------- score a move: category weight per dollar, priority boosts ---------- */
@@ -1661,6 +1665,7 @@ function renderResults(r, inputs) {
     <span class="stepbadge">Step 2 · Your safety fund</span>
     <h2>An account that makes the big deductible safe</h2>
     <p class="sub">An ${term("HSA", DEFS.hsa)} is where the freed up money goes first. Think of it as your deductible, pre paid. Once the balance passes your ${fmt(inputs.bronzeDeductible)} Bronze deductible, the scariest thing about the cheaper plan is handled, and the money is still yours if nothing ever goes wrong. Triple tax free: in, growing, and out for medical costs.</p>
+    ${(() => { const y = yrs.find(x => x.deductibleCovered); return y ? `<div class="bigmath"><div class="eq">Your savings fully cover your deductible in <b>year ${y.year}</b></div><div class="why">From then on, the big deductible is a number on paper, not a risk to your family.</div></div>` : ""; })()}
     ${balanceChart(yrs, inputs)}
     <button class="tbltoggle" onclick="el('balTbl').classList.toggle('hidden')">Show the numbers as a table</button>
     <div id="balTbl" class="hidden">${balanceTable(yrs)}</div>
@@ -1719,12 +1724,55 @@ function renderResults(r, inputs) {
     { t: "Your health plan", h: heroHtml + planChoiceSection(inputs) },
     { t: "Your safety fund", h: hsaHtml }
   ];
-  const lifeH = lifeExplainSection(r, inputs); if (lifeH) chapters.push({ t: "Life insurance", h: lifeH });
+  const lifeExcluded = (inputs.answers.exclude || []).includes("life");
+  const lifeH = lifeExcluded ? "" : lifeExplainSection(r, inputs); if (lifeH) chapters.push({ t: "Life insurance", h: lifeH });
   const scenH = scenarioCards(r, inputs); if (scenH) chapters.push({ t: "Filling the gaps", h: scenH });
   chapters.push({ t: "Year by year", h: yearsHtml });
   chapters.push({ t: "Your first moves", h: summaryHtml });
   window.__chapters = chapters; window.__onePage = false;
   renderChapter(0);
+}
+
+/* adjust panel: change the plan without redoing the questions */
+const ADJ_COVERAGES = [
+  ["accident", "Accident"], ["cancer", "Cancer"], ["critical", "Critical illness"],
+  ["hospital", "Hospital"], ["income", "Paycheck protection"], ["dental", "Dental"],
+  ["vision", "Vision"], ["life", "Life insurance"]
+];
+function adjustPanel() {
+  const inp = LAST.inputs, exc = inp.answers.exclude || [];
+  const opts = (vals, cur) => vals.map(v => `<option value="${v}" ${v === cur ? "selected" : ""}>${v}</option>`).join("");
+  return `
+  <details class="card" style="padding:16px 18px;margin-bottom:14px">
+    <summary style="cursor:pointer;font-weight:700;color:var(--deep)">Adjust this plan</summary>
+    <div class="row" style="margin-top:12px">
+      <div><label class="q" style="margin-top:0">Portion of savings you commit</label>
+        <select id="adjCommit">${opts([50, 75, 100], inp.commitPct)}</select> percent</div>
+      <div><label class="q" style="margin-top:0">Years</label>
+        <select id="adjYears">${opts([5, 7, 10], inp.years)}</select></div>
+      <div><label class="q" style="margin-top:0">Premium growth</label>
+        <select id="adjTrend">${opts([4, 6, 8], inp.trendPct)}</select> percent a year</div>
+      <div><label class="q" style="margin-top:0">Savings growth</label>
+        <select id="adjRet">${opts([0, 4, 6], inp.hsaReturnPct)}</select> percent a year</div>
+    </div>
+    <label class="q">Leave out anything you do not want</label>
+    <div class="opts multi" id="adjExc">
+      ${ADJ_COVERAGES.map(([k, lbl]) => `<button type="button" class="${exc.includes(k) ? "sel" : ""}" data-v="${k}" onclick="this.classList.toggle('sel')">${lbl}</button>`).join("")}
+    </div>
+    <p class="hint">Selected items are removed from the plan; that money goes to savings instead.</p>
+    <div style="margin-top:12px"><button class="btn primary" onclick="applyAdjust()">Rebuild my plan</button></div>
+  </details>`;
+}
+function applyAdjust() {
+  const inp = { ...LAST.inputs };
+  inp.commitPct = +el("adjCommit").value;
+  inp.years = +el("adjYears").value;
+  inp.trendPct = +el("adjTrend").value;
+  inp.hsaReturnPct = +el("adjRet").value;
+  inp.answers = { ...inp.answers, exclude: [...document.querySelectorAll("#adjExc button.sel")].map(b => b.dataset.v) };
+  const r = project(inp);
+  LAST = { r, inputs: inp };
+  renderResults(r, inp);
 }
 
 /* one idea per screen; a link for people who want the whole thing at once */
@@ -1733,7 +1781,7 @@ function renderChapter(i) {
   if (window.__onePage) {
     box.innerHTML = `<div class="chapnav"><span class="chaptitle">Your full plan</span>
       <button class="chip alt" onclick="window.__onePage=false;renderChapter(0)">Switch to guided view</button></div>`
-      + C.map(c => c.h).join("");
+      + adjustPanel() + C.map(c => c.h).join("");
   } else {
     const c = C[i];
     box.innerHTML = `
@@ -1742,9 +1790,10 @@ function renderChapter(i) {
       <span class="chaptitle">${c.t}</span>
       <button class="chip alt" onclick="window.__onePage=true;renderChapter(0)">See it all at once</button>
     </div>
+    ${adjustPanel()}
     ${c.h}
     <div class="nav" style="margin-top:4px">
-      ${i > 0 ? `<button class="btn ghost" onclick="renderChapter(${i - 1})">Back</button>` : `<button class="btn ghost" onclick="restart()">Start over</button>`}
+      ${i > 0 ? `<button class="btn ghost" onclick="renderChapter(${i - 1})">Back</button>` : `<button class="btn ghost" onclick="restart()">Change my answers</button>`}
       ${i < C.length - 1 ? `<button class="btn primary" onclick="renderChapter(${i + 1})">Next: ${C[i + 1].t}</button>` : `<button class="btn primary" onclick="renderChapter(0)">Review from the top</button>`}
     </div>`;
   }
