@@ -781,7 +781,7 @@ const CATALOG = {
 const BENEFITS = {
   "meta": {
     "purpose": "Filed benefit highlights keyed to the planner's product options, extracted from Aflac TN SERFF policy forms via in-browser pdf.js. Shown in the year a product is purchased.",
-    "state": "TN", "extracted": "2026-08-03",
+    "state": "TN", "extracted": "2026-08-03 (cancer, accident, hospital, LSCI, dental) and 2026-08-07 (vision, STD, critical care, term and whole life)",
     "note": "Amounts are from filed policy forms. Where a form files variable ranges (shown in brackets), the issued amount is set at sale; the planner's chosen option/benefit amount sits inside that range. Highlights are a representative subset, not the full schedule. The policy controls."
   },
   "cancer": {
@@ -864,7 +864,50 @@ const BENEFITS = {
       "Level Essentials through Level 3 step up the schedule amounts and covered services"
     ]
   },
-  "_pending": "vision (VSN, AFLA-128201603), short term disability (A57600, AFLA-127048798), critical care and recovery (A71 series), and life (A68000 / Q60000 / juvenile, via TN and the Interstate Compact) not yet extracted. Filing IDs recorded in the project spec."
+  "vision": {
+    "source": "SERFF AFLA-128201603, Vision Now VSN series with endorsements VSN91 / VSN92 / VSN93 (approved). Amounts shown are the amended filed amounts effective October 2012.",
+    "shared_highlights": [
+      "Eye examination benefit: $45, once per covered person per policy year",
+      "Vision correction benefit, Option 1: $80 toward prescribed glasses or contacts every policy year, no waiting period",
+      "Vision correction benefit, Option 2: $175 every 2 years after a 12 month wait; Option 3: $270 every 3 years after a 24 month wait",
+      "Refractive error correction surgery benefit paid in place of the materials benefit for that period ($130 under the no waiting period option)"
+    ]
+  },
+  "std": {
+    "source": "SERFF AFLA-127048798, form A57600TN with riders A57650 / A57651 series (approved). The monthly benefit amount is selected at issue in $100 units.",
+    "shared_highlights": [
+      "Pays your selected monthly benefit in cash while you are totally disabled by a covered sickness or off the job injury, after the elimination period",
+      "Filed elimination period choices: injury 0 to 180 days, sickness 7 to 180 days",
+      "Filed benefit period choices: 3, 6, 12, 18, or 24 months of total disability; partial disability benefit up to 3 months",
+      "Premiums waived after more than 90 consecutive days of covered disability",
+      "Filed riders: On the Job Injury Disability Benefit Rider and Additional Units Disability Benefit Rider"
+    ]
+  },
+  "critcare": {
+    "source": "SERFF AFLA-126468077 (Specified Health Event endorsements A92396 to A92400) and AFLA-134010142 (2024 endorsement A71091) to the A71000 series policy. The base A71000TN policy predates public SERFF access; highlights are from the filed endorsements.",
+    "shared_highlights": [
+      "Continuing care benefit: $125 per day for rehabilitation and related treatment following a covered specified health event such as heart attack or stroke",
+      "Sudden cardiac arrest benefit: $5,000",
+      "First occurrence lifetime maximum (2024 endorsement): $10,000 to $20,000 for the named insured or spouse and $12,500 to $25,000 for dependent children; the issued amount is set at sale",
+      "Reoccurrence benefit (2024 endorsement): $5,000 to $10,000"
+    ]
+  },
+  "life": {
+    "source": "SERFF AFLA-129060717 (Interstate Compact), Term Life 68000 series: 10 year ICC1368200, 20 year ICC1368300, 30 year ICC1368400 (approved 2013)",
+    "shared_highlights": [
+      "Level premium guaranteed for the full initial term (10, 20, or 30 years), then annually renewable to age 95",
+      "Convertible to permanent coverage until the end of the initial term or the policy anniversary after age 65, whichever comes first",
+      "Accelerated death benefit for a terminal illness built in",
+      "Filed riders: spouse 10, 20, or 30 year term, child term rider, waiver of premium"
+    ],
+    "whole_source": "SERFF AFLA-131826351 (TN), Q60000 group whole life, certificate Q60100CTN (approved 2018)",
+    "whole_highlights": [
+      "Whole life protection with guaranteed cash values that build over time",
+      "Accelerated death payment for a terminal illness built in",
+      "Filed riders include accidental death, chronic condition accelerated payment with extension and restoration, line of duty death benefit, and waiver of premium"
+    ],
+    "juvenile_note": "Juvenile Term to 25 also filed: ICC18B61JTO (AFLA-131456520), $10,000 face, convertible at age 25. Not used by the planner engine."
+  }
 }
 ;
 /* =====================================================================
@@ -1645,6 +1688,7 @@ function lifeExplainSection(r, inputs) {
 
 function renderResults(r, inputs) {
   const box = el("results");
+  window.__lifeShown = {};
   const gap = inputs.goldMonthly - inputs.bronzeMonthly;
   const yrs = r.years, last = yrs[yrs.length - 1];
   const totalAflac = last.aflacMonthly, totalLife = last.lifeMonthly;
@@ -1888,6 +1932,18 @@ function filedBenefits(m) {
   }
   // products with a shared schedule show it when first added (not on every upgrade)
   if (m.kind === "add" && p.shared_highlights) return { list: p.shared_highlights, src: p.source };
+  // life ladder rungs: show the filed term or whole life highlights once each, on the first rung of that type
+  if (m.kind === "life") {
+    const wl = !!m.wholeLife;
+    window.__lifeShown = window.__lifeShown || {};
+    const key = wl ? "wl" : "term";
+    if (window.__lifeShown[key]) return null;
+    const list = wl ? p.whole_highlights : p.shared_highlights;
+    const src = wl ? p.whole_source : p.source;
+    if (!list) return null;
+    window.__lifeShown[key] = true;
+    return { list, src };
+  }
   return null;
 }
 const KIND_LABELS = { add: "New", upgrade: "Level up", rider: "Add on", swap: "Swap", life: "Ladder" };
