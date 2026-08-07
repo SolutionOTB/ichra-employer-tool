@@ -1264,6 +1264,8 @@ const STEPS = 5;
 
 function el(id) { return document.getElementById(id); }
 function fmt(n) { return "$" + Math.round(n).toLocaleString("en-US"); }
+/* Aflac premium display: rounded, not exact. Nearest $5 above $10, nearest dollar below. */
+function fmtA(n) { const v = Math.abs(n); return "$" + (v >= 10 ? Math.round(v / 5) * 5 : Math.round(v)).toLocaleString("en-US"); }
 
 /* single and multi select button groups */
 function group(id, items, multi, onpick) {
@@ -1631,8 +1633,8 @@ function lifeExplainSection(r, inputs) {
     </div>
     <p class="sub">Nobody has to buy ${fmt(target)} of coverage on day one. <b>Laddering</b> means buying it in layers, a rung at a time, as the budget frees up. Each rung is ${term("term life", DEFS.term_life)}, priced at your age when you buy it. Waiting costs a little more per rung, and the plan shows you that honestly instead of hiding it.</p>
     <div class="ladder-visual">
-      ${rungs.filter(x => !x.m.wholeLife).map(x => `<div class="rung"><span>Year ${x.year}, age ${inputs.answers.primaryAge + x.year - 1}: add $100,000 of 20 year term</span><span class="amt">+${fmt(x.m.monthlyCost)}/mo</span></div>`).join("")}
-      ${rungs.filter(x => x.m.wholeLife).map(x => `<div class="rung perm"><span>Year ${x.year}: a $50,000 ${term("whole life", DEFS.whole_life)} layer that never expires</span><span class="amt">+${fmt(x.m.monthlyCost)}/mo</span></div>`).join("")}
+      ${rungs.filter(x => !x.m.wholeLife).map(x => `<div class="rung"><span>Year ${x.year}, age ${inputs.answers.primaryAge + x.year - 1}: add $100,000 of 20 year term</span><span class="amt">+${fmtA(x.m.monthlyCost)}/mo</span></div>`).join("")}
+      ${rungs.filter(x => x.m.wholeLife).map(x => `<div class="rung perm"><span>Year ${x.year}: a $50,000 ${term("whole life", DEFS.whole_life)} layer that never expires</span><span class="amt">+${fmtA(x.m.monthlyCost)}/mo</span></div>`).join("")}
     </div>
     ${rungs.length
       ? `<p class="sub">By year ${inputs.years} the ladder reaches <b>${fmt(last.lifeFace)}</b> of term coverage${last.wholeLife ? " plus the permanent layer" : ""}, built without ever breaking the monthly budget.</p>`
@@ -1693,8 +1695,8 @@ function renderResults(r, inputs) {
   <div class="card">
     <h2>What this costs and what it builds, side by side</h2>
     <div class="statgrid">
-      <div class="stat"><div class="v">${fmt(totalAflac)}/mo</div><div class="l">Supplemental protection by year ${inputs.years}</div></div>
-      <div class="stat"><div class="v">${fmt(totalLife)}/mo</div><div class="l">Life insurance ladder by year ${inputs.years}</div></div>
+      <div class="stat"><div class="v">${fmtA(totalAflac)}/mo</div><div class="l">Supplemental protection by year ${inputs.years}</div></div>
+      <div class="stat"><div class="v">${fmtA(totalLife)}/mo</div><div class="l">Life insurance ladder by year ${inputs.years}</div></div>
       <div class="stat"><div class="v">${fmt(last.hsaBalance)}</div><div class="l">Projected HSA balance</div></div>
       <div class="stat"><div class="v">${last.lifeFace > 0 ? fmt(last.lifeFace) + (last.wholeLife ? " +" : "") : "$0"}</div><div class="l">Term life face amount${last.wholeLife ? ", plus a permanent layer" : ""}</div></div>
     </div>
@@ -1815,7 +1817,7 @@ function actionCard(r, inputs) {
     <div class="move"><div class="k life">2</div><div class="d"><b>Open the HSA and set one automatic transfer</b>
       <p>About ${fmt(y1.hsaMonthly)} a month to start. Set it and forget it; this becomes your deductible fund.</p></div></div>
     <div class="move"><div class="k rider">3</div><div class="d"><b>${y1.moves.length ? "Start year one's protection" : "That is it for year one"}</b>
-      <p>${y1.moves.length ? cap(buys.join("; ")) + ", about " + fmt(buyCost) + " a month total. The plan handles when to add the rest, one step a year." : "Your first purchases arrive in later years as the budget grows. For now the savings do the work."}</p></div></div>
+      <p>${y1.moves.length ? cap(buys.join("; ")) + ", about " + fmtA(buyCost) + " a month total. The plan handles when to add the rest, one step a year." : "Your first purchases arrive in later years as the budget grows. For now the savings do the work."}</p></div></div>
   </div>`;
 }
 
@@ -1894,7 +1896,7 @@ function yearCard(y) {
     <div class="move">
       <div class="k ${m.kind}">${KIND_LABELS[m.kind] || m.kind}</div>
       <div class="d"><b>${moveTitle(m)}</b><p>${m.gain}</p>${benefitBlock(m)}</div>
-      <div class="c">${m.monthlyCost >= 0 ? "+" : "−"}${fmt(Math.abs(m.monthlyCost))}/mo</div>
+      <div class="c">${m.monthlyCost >= 0 ? "+" : "−"}${fmtA(m.monthlyCost)}/mo</div>
     </div>`).join("")
     : `<div class="move"><div class="d"><b>Nothing to buy this year</b><p>Your protection is set. The growing budget flows straight into savings.</p></div></div>`;
   return `
@@ -1908,8 +1910,8 @@ function yearCard(y) {
       ${moves}
       <div class="alloc">
         <span>Into savings <b>${fmt(y.hsaMonthly)}/mo</b></span>
-        <span>Cash benefit policies <b>${fmt(y.aflacMonthly)}/mo</b></span>
-        <span>Life ladder <b>${fmt(y.lifeMonthly)}/mo</b></span>
+        <span>Cash benefit policies <b>${fmtA(y.aflacMonthly)}/mo</b></span>
+        <span>Life ladder <b>${fmtA(y.lifeMonthly)}/mo</b></span>
         <span>Savings balance <b>${fmt(y.hsaBalance)}</b></span>
       </div>
     </div>
@@ -1958,7 +1960,7 @@ function allocChart(yrs) {
 }
 function allocTable(yrs) {
   return `<table class="dv"><tr><th>Year</th><th>HSA /mo</th><th>Supplemental /mo</th><th>Life /mo</th><th>Total /mo</th></tr>
-  ${yrs.map(y => `<tr><td>Year ${y.year}</td><td>${fmt(y.hsaMonthly)}</td><td>${fmt(y.aflacMonthly)}</td><td>${fmt(y.lifeMonthly)}</td><td>${fmt(y.hsaMonthly + y.aflacMonthly + y.lifeMonthly)}</td></tr>`).join("")}</table>`;
+  ${yrs.map(y => `<tr><td>Year ${y.year}</td><td>${fmt(y.hsaMonthly)}</td><td>${fmtA(y.aflacMonthly)}</td><td>${fmtA(y.lifeMonthly)}</td><td>${fmt(y.hsaMonthly + y.aflacMonthly + y.lifeMonthly)}</td></tr>`).join("")}</table>`;
 }
 
 /* ---------- HSA balance line chart (SVG) ---------- */
@@ -2014,7 +2016,7 @@ function lifeSection(r, inputs) {
     ${rungs.length ? rungs.map(x => `
       <div class="move"><div class="k life">Year ${x.year}</div>
         <div class="d"><b>${cap(x.m.detail)}</b><p>${x.m.gain}</p></div>
-        <div class="c">+${fmt(x.m.monthlyCost)}/mo</div></div>`).join("")
+        <div class="c">+${fmtA(x.m.monthlyCost)}/mo</div></div>`).join("")
       : `<div class="empty">The committed budget never reached a ladder rung inside the horizon. Raise the commitment share or extend the horizon to see the ladder form.</div>`}
     <div class="src">Ladder reached ${fmt(last.lifeFace)} of term coverage${last.wholeLife ? " plus a permanent whole life layer" : ""} by year ${inputs.years}. Illustrative, from non tobacco interpolated averages; an agent quotes the real premium at issue.</div>
   </div>`;
@@ -2032,5 +2034,3 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 </body></html>
-
-<!-- build r5 -->
