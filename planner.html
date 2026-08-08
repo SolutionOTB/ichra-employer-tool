@@ -141,8 +141,8 @@ footer{font-size:.75rem;color:var(--slate);max-width:880px;margin:0 auto;padding
   <div id="wizard">
     <!-- Intro: the promise -->
     <div class="card" id="introCard">
-      <h2>Ten minutes. One plan.</h2>
-      <p class="sub" style="font-size:1.05rem">Answer a few questions about your family and what worries you. You get back a simple year by year plan: which health plan to pick, how to build a safety fund with the money you save, and when to add protection, one affordable step at a time.</p>
+      <h2>Pick the right health plan, then put the savings to work</h2>
+      <p class="sub" style="font-size:1.05rem">Answer a few questions about your family and what worries you. You get a simple year by year plan: which health plan to pick, how to build a savings cushion with the money you free up, and when to add protection, one affordable step at a time. It takes about ten minutes.</p>
       <p class="sub">No email required. Nothing is saved. The numbers stay on your screen.</p>
       <div class="nav"><span></span><button class="btn primary" onclick="startWizard()">Start</button></div>
     </div>
@@ -171,9 +171,9 @@ footer{font-size:.75rem;color:var(--slate);max-width:880px;margin:0 auto;padding
     <!-- Step 5 (last): plan numbers -->
     <div class="card step hidden" data-step="4">
       <h2>Last step: your two health plan choices</h2>
-      <p class="sub">We compare a Gold plan (higher monthly cost, small deductible) against a Bronze plan that is HSA eligible (lower monthly cost, bigger deductible). The gap between their monthly prices is the money your whole plan is built from.</p>
+      <p class="sub">We compare a Gold plan (higher monthly cost, small deductible) against a Bronze plan that is HSA eligible (lower monthly cost, bigger deductible). The gap between their monthly prices is the money your whole plan is built from. Live prices for your ZIP load automatically; you can adjust any number before building.</p>
       <div id="hsLive">
-        <button class="btn primary" id="hsPull" onclick="pullPlans()">Pull plans for my ZIP</button>
+        <button class="btn ghost" id="hsPull" onclick="pullPlans()">Refresh live pricing</button>
         <div id="hsStatus" class="src"></div>
         <div id="hsEmpty" class="empty hidden">Live plan pricing is unavailable right now. No estimates are shown in its place. Enter the numbers from your own quote screen below, or try again later.</div>
       </div>
@@ -1403,9 +1403,12 @@ function showStep(n) {
   document.querySelectorAll(".step").forEach(s => s.classList.toggle("hidden", +s.dataset.step !== n));
   [...el("dots").children].forEach((d, i) => d.classList.toggle("on", i <= n));
   S.step = n; window.scrollTo({ top: 0, behavior: "smooth" });
+  // arriving at the plan numbers step: make sure a pull ran (covers back and forth navigation)
+  if (n === STEPS - 1 && !S.plans.pulled && !S.plans.pulling) pullPlans(true);
 }
 function next() {
   if (S.step === 0 && !validateHousehold()) return;
+  if (S.step === 0) pullPlans(true); // start fetching live prices in the background as soon as ZIP and ages exist
   showStep(Math.min(S.step + 1, STEPS - 1));
 }
 function back() { showStep(Math.max(S.step - 1, 0)); }
@@ -1429,10 +1432,12 @@ function alertMsg(t) {
 }
 
 /* ============================ HEALTHSHERPA PULL ============================ */
-async function pullPlans() {
+async function pullPlans(auto) {
   const zip = el("zip").value.trim();
-  if (!/^\d{5}$/.test(zip)) { alertMsg("Enter a 5 digit ZIP first."); return; }
-  el("hsStatus").textContent = "Pulling plans…";
+  if (!/^\d{5}$/.test(zip)) { if (!auto) alertMsg("Enter a 5 digit ZIP first."); return; }
+  if (S.plans.pulling) return;
+  S.plans.pulling = true;
+  el("hsStatus").textContent = "Pulling live prices for ZIP " + zip + "…";
   el("hsEmpty").classList.add("hidden");
   try {
     const ages = [parseInt(el("age1").value, 10)];
@@ -1454,12 +1459,14 @@ async function pullPlans() {
     }
     // expected shape from the Worker: {gold:{premium,deductible,oopMax,name}, bronzeHdhp:{premium,deductible,oopMax,name}, pulledAt}
     if (!data.gold || !data.bronzeHdhp) throw new Error("incomplete");
-    el("goldMo").value = Math.round(data.gold.premium);
-    el("goldDed").value = Math.round(data.gold.deductible);
-    if (data.gold.oopMax) el("goldOop").value = Math.round(data.gold.oopMax);
-    el("bronzeMo").value = Math.round(data.bronzeHdhp.premium);
-    el("bronzeDed").value = Math.round(data.bronzeHdhp.deductible);
-    el("bronzeOop").value = Math.round(data.bronzeHdhp.oopMax);
+    // background pulls never clobber a number the user already typed; the Refresh button always overwrites
+    const write = (id, v) => { if (!auto || !el(id).value) el(id).value = Math.round(v); };
+    write("goldMo", data.gold.premium);
+    write("goldDed", data.gold.deductible);
+    if (data.gold.oopMax) write("goldOop", data.gold.oopMax);
+    write("bronzeMo", data.bronzeHdhp.premium);
+    write("bronzeDed", data.bronzeHdhp.deductible);
+    write("bronzeOop", data.bronzeHdhp.oopMax);
     S.plans.pulled = true; S.plans.pullDate = data.pulledAt || new Date().toISOString().slice(0, 10);
     S.plans.goldName = data.gold.name; S.plans.bronzeName = data.bronzeHdhp.name;
     el("hsStatus").textContent = "Source: HealthSherpa, pulled " + S.plans.pullDate + ". " +
@@ -1468,6 +1475,8 @@ async function pullPlans() {
     S.plans.pulled = false;
     el("hsStatus").textContent = "";
     el("hsEmpty").classList.remove("hidden");
+  } finally {
+    S.plans.pulling = false;
   }
 }
 
@@ -1721,7 +1730,7 @@ function renderResults(r, inputs) {
   const yearsHtml = `
   <div class="card">
     <span class="stepbadge">Your year by year plan</span>
-    <h2>Nothing to memorize. One or two moves a year.</h2>
+    <h2>One or two moves a year</h2>
     <p class="sub">You do not buy all of this today. Each year the plan adds or upgrades one or two pieces as the budget grows, and whatever is left flows to savings automatically.</p>
     ${yrs.map(yearCard).join("")}
   </div>
